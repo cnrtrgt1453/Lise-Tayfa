@@ -1,0 +1,41 @@
+# Built application files
+*.apk
+*.aab
+*.aar
+*.jar
+*.war
+*.ear
+
+# Android build outputs & caches
+**/build/
+.gradle/
+**/.gradle/
+.kotlin/
+**/.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local configuration files (SDK paths, local properties)
+local.properties
+**/local.properties
+
+# Signing keys & secrets (CRITICAL: Never upload keystores or passwords)
+*.jks
+*.keystore
+*.p12
+*.pem
+key.properties
+**/key.properties
+
+# IDE & Editor files
+.idea/
+**/.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
