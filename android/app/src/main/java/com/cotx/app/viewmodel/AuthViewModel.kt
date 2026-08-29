@@ -1,5 +1,6 @@
 package com.cotx.app.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cotx.app.data.model.User
@@ -69,7 +70,42 @@ class AuthViewModel(
                     _uiState.value = AuthUiState.Success(user)
                 }
                 .onFailure { error ->
-                    _uiState.value = AuthUiState.Error(error.localizedMessage ?: "Google ile giriş başarısız oldu.")
+                    Log.e("AuthViewModel", "================================================================================")
+                    Log.e("AuthViewModel", "🚨🚨🚨 GOOGLE İLE GİRİŞ HATASI DETAYLI KONSOL LOGU 🚨🚨🚨")
+                    Log.e("AuthViewModel", "================================================================================")
+                    Log.e("AuthViewModel", "Hata Türü (Exception Class) : ${error.javaClass.canonicalName ?: error.javaClass.name}")
+                    Log.e("AuthViewModel", "Hata Mesajı (Message)         : ${error.message ?: "Yok"}")
+                    Log.e("AuthViewModel", "Yerelleştirilmiş Mesaj        : ${error.localizedMessage ?: "Yok"}")
+                    Log.e("AuthViewModel", "Hata Kök Nedeni (Cause)       : ${error.cause?.toString() ?: "Yok"}")
+                    Log.e("AuthViewModel", "Hata Cause Mesajı             : ${error.cause?.message ?: "Yok"}")
+                    
+                    if (error is com.google.firebase.auth.FirebaseAuthException) {
+                        Log.e("AuthViewModel", "Firebase Auth Hata Kodu       : ${error.errorCode}")
+                    }
+                    
+                    Log.e("AuthViewModel", "--------------------------------------------------------------------------------")
+                    Log.e("AuthViewModel", "📋 TAM HATA İZİ (STACK TRACE):")
+                    Log.e("AuthViewModel", Log.getStackTraceString(error))
+                    Log.e("AuthViewModel", "================================================================================")
+                    
+                    val detailedErrorLog = buildString {
+                        appendLine("🔥 Firebase / Google Giriş Hatası Logu")
+                        appendLine()
+                        appendLine("• Tür: ${error.javaClass.name}")
+                        appendLine("• Mesaj: ${error.message ?: error.localizedMessage ?: "Bilinmeyen hata"}")
+                        if (error is com.google.firebase.auth.FirebaseAuthException) {
+                            appendLine("• Firebase Hata Kodu: ${error.errorCode}")
+                        }
+                        if (error.cause != null) {
+                            appendLine("• Kök Neden (Cause): ${error.cause?.localizedMessage ?: error.cause}")
+                        }
+                        appendLine()
+                        appendLine("📋 Stack Trace (İlk 10 Satır):")
+                        val stackLines = Log.getStackTraceString(error).lines().filter { it.isNotBlank() }.take(10).joinToString("\n")
+                        append(stackLines)
+                    }
+
+                    _uiState.value = AuthUiState.Error(detailedErrorLog)
                 }
         }
     }
