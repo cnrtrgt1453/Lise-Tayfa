@@ -95,7 +95,9 @@ fun EditProfileScreen(
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var isSaving by remember { mutableStateOf(false) }
 
-    val allEarnedBadges = remember(user) { BadgeHelper.getAllEarnedBadgeNames(user) }
+    val allEarnedBadges = remember(user.subjectCounts, user.badges) {
+        BadgeHelper.getAllEarnedBadgeNames(user.subjectCounts, user.badges)
+    }
     val visibleBadges = remember {
         mutableStateListOf<String>().apply {
             if (user.visibleBadges != null) {

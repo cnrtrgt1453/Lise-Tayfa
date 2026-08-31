@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.cotx.app.data.model.User
+import com.cotx.app.domain.model.UserSummary
 import com.cotx.app.ui.theme.PrimaryPurple
 import com.cotx.app.ui.theme.SecondaryOrange
 import com.cotx.app.viewmodel.AddQuestionUiState
@@ -35,12 +35,13 @@ import com.cotx.app.util.ExamSubjectHelper
 @Composable
 fun AddQuestionScreen(
     viewModel: AddQuestionViewModel,
-    currentUser: User,
+    currentUser: UserSummary,
+    examType: String,
     onNavigateBack: () -> Unit,
     onQuestionUploaded: () -> Unit
 ) {
     val context = LocalContext.current
-    val subjects = remember(currentUser.examType) { ExamSubjectHelper.getSubjectsForExam(currentUser.examType) }
+    val subjects = remember(examType) { ExamSubjectHelper.getSubjectsForExam(examType) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedSubject by remember { mutableStateOf(subjects.firstOrNull() ?: "Matematik") }
     var topic by remember { mutableStateOf("") }
@@ -214,10 +215,10 @@ fun AddQuestionScreen(
                 onClick = {
                     viewModel.uploadQuestion(
                         context = context,
-                        authorId = currentUser.uid,
+                        authorId = currentUser.id,
                         authorName = currentUser.displayName,
-                        authorPhotoUrl = currentUser.photoUrl,
-                        examType = currentUser.examType.ifEmpty { "TYT/AYT" },
+                        authorPhotoUrl = currentUser.avatarUrl ?: "",
+                        examType = examType.ifEmpty { "TYT/AYT" },
                         subject = selectedSubject,
                         topic = topic,
                         description = description,

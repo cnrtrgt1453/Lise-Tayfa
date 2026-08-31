@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.cotx.app.data.model.Question
 import com.cotx.app.data.model.Solution
-import com.cotx.app.data.model.User
 import com.cotx.app.data.repository.QuestionRepository
+import com.cotx.app.domain.model.UserSummary
 import com.cotx.app.ui.screens.feed.QuestionCard
 import com.cotx.app.ui.theme.AccentTeal
 import com.cotx.app.ui.theme.PrimaryPurple
@@ -36,7 +36,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun QuestionDetailScreen(
     questionId: String,
-    currentUser: User,
+    currentUser: UserSummary,
+    followingUserIds: List<String> = emptyList(),
     repository: QuestionRepository = QuestionRepository(),
     onNavigateToProfile: (userId: String) -> Unit = {},
     onNavigateToExplore: () -> Unit = {},
@@ -82,7 +83,7 @@ fun QuestionDetailScreen(
                     }
                 },
                 actions = {
-                    if (question != null && question?.authorId == currentUser.uid) {
+                    if (question != null && question?.authorId == currentUser.id) {
                         IconButton(onClick = { showDeleteConfirmDialog = true }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
@@ -122,9 +123,9 @@ fun QuestionDetailScreen(
                                     coroutineScope.launch {
                                         repository.addSolution(
                                             questionId = questionId,
-                                            authorId = currentUser.uid,
+                                            authorId = currentUser.id,
                                             authorName = currentUser.displayName,
-                                            authorPhotoUrl = currentUser.photoUrl,
+                                            authorPhotoUrl = currentUser.avatarUrl ?: "",
                                             contentText = text
                                         )
                                         loadData()
@@ -150,7 +151,7 @@ fun QuestionDetailScreen(
                         onClick = {
                             showDeleteConfirmDialog = false
                             coroutineScope.launch {
-                                repository.deleteQuestion(questionId, currentUser.uid).onSuccess {
+                                repository.deleteQuestion(questionId, currentUser.id).onSuccess {
                                     onNavigateBack()
                                 }
                             }
@@ -230,28 +231,28 @@ fun QuestionDetailScreen(
                     item {
                         QuestionCard(
                             question = currentQ,
-                            currentUserId = currentUser.uid,
-                            isFollowingAuthor = currentUser.following.contains(currentQ.authorId),
+                            currentUserId = currentUser.id,
+                            isFollowingAuthor = followingUserIds.contains(currentQ.authorId),
                             onCardClick = {},
                             onAuthorClick = { onNavigateToProfile(currentQ.authorId) },
                             onLikeClick = {
-                                val isLiked = currentQ.likedBy.contains(currentUser.uid)
+                                val isLiked = currentQ.likedBy.contains(currentUser.id)
                                 coroutineScope.launch {
                                     repository.toggleLikeQuestion(
                                         questionId = currentQ.id,
-                                        userId = currentUser.uid,
+                                        userId = currentUser.id,
                                         userName = currentUser.displayName,
-                                        userPhotoUrl = currentUser.photoUrl,
+                                        userPhotoUrl = currentUser.avatarUrl ?: "",
                                         isLiked = isLiked
                                     )
                                     repository.getQuestionById(questionId).onSuccess { question = it }
                                 }
                             },
                             onFollowToggleClick = {},
-                            onDeleteQuestionClick = if (currentQ.authorId == currentUser.uid) {
+                            onDeleteQuestionClick = if (currentQ.authorId == currentUser.id) {
                                 {
                                     coroutineScope.launch {
-                                        repository.deleteQuestion(questionId, currentUser.uid).onSuccess {
+                                        repository.deleteQuestion(questionId, currentUser.id).onSuccess {
                                             onNavigateBack()
                                         }
                                     }
@@ -273,7 +274,7 @@ fun QuestionDetailScreen(
                 items(solutions) { solution ->
                     SolutionItem(
                         solution = solution,
-                        currentUserId = currentUser.uid,
+                        currentUserId = currentUser.id,
                         onAuthorClick = { userId -> onNavigateToProfile(userId) },
                         onReportClick = { solutionToReport = solution }
                     )
@@ -293,7 +294,7 @@ fun QuestionDetailScreen(
                             repository.reportSolution(
                                 questionId = questionId,
                                 solutionId = targetSol.id,
-                                reporterId = currentUser.uid,
+                                reporterId = currentUser.id,
                                 reason = reason,
                                 note = note
                             ).onSuccess {

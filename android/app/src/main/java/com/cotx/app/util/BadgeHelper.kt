@@ -1,7 +1,5 @@
 package com.cotx.app.util
 
-import com.cotx.app.data.model.User
-
 data class SubjectBadge(
     val title: String,
     val description: String,
@@ -19,9 +17,8 @@ object BadgeHelper {
      * - 100+ questions: Gümüş 🥈
      * - 1000+ questions: Altın 🥇
      */
-    fun getEarnedBadges(user: User): List<SubjectBadge> {
+    fun getEarnedBadges(subjectCounts: Map<String, Int>): List<SubjectBadge> {
         val earned = mutableListOf<SubjectBadge>()
-        val subjectCounts = user.subjectCounts
 
         subjectCounts.forEach { (subject, count) ->
             when {
@@ -70,12 +67,12 @@ object BadgeHelper {
     /**
      * Returns string names of all earned badges (subject badges + initial badges)
      */
-    fun getAllEarnedBadgeNames(user: User): List<String> {
+    fun getAllEarnedBadgeNames(subjectCounts: Map<String, Int>, badges: List<String>): List<String> {
         val list = mutableListOf<String>()
-        getEarnedBadges(user).forEach { badge ->
+        getEarnedBadges(subjectCounts).forEach { badge ->
             list.add("${badge.emoji} ${badge.title}")
         }
-        user.badges.forEach { badge ->
+        badges.forEach { badge ->
             val formatted = if (badge.startsWith("🏅") || badge.startsWith("🥉") || badge.startsWith("🥈") || badge.startsWith("🥇")) badge else "🏅 $badge"
             if (!list.contains(formatted)) {
                 list.add(formatted)
@@ -87,9 +84,8 @@ object BadgeHelper {
     /**
      * Returns progress list for all main subjects to show how close the user is to earning badges.
      */
-    fun getSubjectBadgeProgressList(user: User): List<SubjectBadge> {
+    fun getSubjectBadgeProgressList(subjectCounts: Map<String, Int>): List<SubjectBadge> {
         val mainSubjects = listOf("Matematik", "Fizik", "Kimya", "Biyoloji", "Türkçe", "Tarih", "Coğrafya")
-        val subjectCounts = user.subjectCounts
 
         return mainSubjects.map { subject ->
             val count = subjectCounts[subject] ?: 0

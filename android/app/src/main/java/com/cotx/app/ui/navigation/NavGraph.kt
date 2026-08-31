@@ -92,7 +92,10 @@ fun CotxNavGraph(
 
             FeedScreen(
                 viewModel = feedViewModel,
-                currentUser = user,
+                currentUser = UserSummary(id = user.uid, displayName = user.displayName, avatarUrl = user.photoUrl),
+                examType = user.examType,
+                myFollowingUserIds = user.following,
+                myBlockedUserIds = user.blockedUsers,
                 unreadNotificationCount = unreadNotificationCount,
                 unreadMessageCount = unreadMessageCount,
                 onExamSelected = { selectedExam ->
@@ -120,7 +123,8 @@ fun CotxNavGraph(
             val user = currentUser ?: User(displayName = "Öğrenci")
             AddQuestionScreen(
                 viewModel = addQuestionViewModel,
-                currentUser = user,
+                currentUser = UserSummary(id = user.uid, displayName = user.displayName, avatarUrl = user.photoUrl),
+                examType = user.examType,
                 onNavigateBack = { navController.popBackStack() },
                 onQuestionUploaded = {
                     feedViewModel.loadFeed()
@@ -137,7 +141,8 @@ fun CotxNavGraph(
             val user = currentUser ?: User(displayName = "Öğrenci")
             QuestionDetailScreen(
                 questionId = questionId,
-                currentUser = user,
+                currentUser = UserSummary(id = user.uid, displayName = user.displayName, avatarUrl = user.photoUrl),
+                followingUserIds = user.following,
                 onNavigateToProfile = { targetUserId ->
                     navController.navigate(Screen.Profile.createRoute(targetUserId))
                 },
@@ -298,16 +303,16 @@ fun CotxNavGraph(
         }
 
         composable(Screen.Notifications.route) {
-            val user = currentUser ?: User(displayName = "Öğrenci")
-            androidx.compose.runtime.LaunchedEffect(user.uid) {
-                if (user.uid.isNotEmpty()) {
-                    notificationViewModel.markAllAsRead(user.uid)
+            val myUserId = currentUser?.uid ?: ""
+            androidx.compose.runtime.LaunchedEffect(myUserId) {
+                if (myUserId.isNotEmpty()) {
+                    notificationViewModel.markAllAsRead(myUserId)
                 }
             }
 
             NotificationScreen(
                 viewModel = notificationViewModel,
-                currentUser = user,
+                currentUserId = myUserId,
                 unreadNotificationCount = unreadNotificationCount,
                 unreadMessageCount = unreadMessageCount,
                 onNavigateToQuestionDetail = { questionId ->
@@ -326,7 +331,7 @@ fun CotxNavGraph(
                     }
                 },
                 onNavigateToDMList = {
-                    if (user.uid.isNotEmpty()) chatViewModel.markAllConversationsAsRead(user.uid)
+                    if (myUserId.isNotEmpty()) chatViewModel.markAllConversationsAsRead(myUserId)
                     navController.navigate(Screen.Messages.route)
                 },
                 onNavigateToProfile = { targetUserId ->

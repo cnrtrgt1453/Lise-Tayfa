@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.cotx.app.data.model.Notification
-import com.cotx.app.data.model.User
 import com.cotx.app.ui.components.CotxBottomBar
 import com.cotx.app.ui.components.CotxBottomTab
 import com.cotx.app.ui.theme.PrimaryPurple
@@ -40,7 +39,7 @@ import java.util.Locale
 @Composable
 fun NotificationScreen(
     viewModel: NotificationViewModel,
-    currentUser: User,
+    currentUserId: String,
     unreadNotificationCount: Int = 0,
     unreadMessageCount: Int = 0,
     onNavigateToQuestionDetail: (questionId: String) -> Unit,
@@ -52,10 +51,10 @@ fun NotificationScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(currentUser.uid) {
-        if (currentUser.uid.isNotEmpty()) {
-            viewModel.loadNotifications(currentUser.uid)
-            viewModel.markAllAsRead(currentUser.uid)
+    LaunchedEffect(currentUserId) {
+        if (currentUserId.isNotEmpty()) {
+            viewModel.loadNotifications(currentUserId)
+            viewModel.markAllAsRead(currentUserId)
         }
     }
 
@@ -108,7 +107,7 @@ fun NotificationScreen(
                     ) {
                         Text(state.message, color = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.loadNotifications(currentUser.uid) }) {
+                        Button(onClick = { viewModel.loadNotifications(currentUserId) }) {
                             Text("Tekrar Dene")
                         }
                     }
@@ -150,7 +149,7 @@ fun NotificationScreen(
                                 NotificationCard(
                                     notification = notification,
                                     onClick = {
-                                        viewModel.markAsRead(notification.id, currentUser.uid)
+                                        viewModel.markAsRead(notification.id, currentUserId)
                                         if (notification.type == "FOLLOW" || (notification.questionId.isEmpty() && notification.senderId.isNotEmpty())) {
                                             if (notification.senderId.isNotEmpty()) {
                                                 onNavigateToProfile(notification.senderId)

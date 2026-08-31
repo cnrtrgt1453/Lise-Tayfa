@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.cotx.app.data.model.Question
-import com.cotx.app.data.model.User
 import com.cotx.app.domain.model.UserSummary
 import com.cotx.app.ui.components.CotxBottomBar
 import com.cotx.app.ui.components.CotxBottomTab
@@ -40,7 +39,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun FeedScreen(
     viewModel: FeedViewModel,
-    currentUser: User,
+    currentUser: UserSummary,
+    examType: String,
+    myFollowingUserIds: List<String>,
+    myBlockedUserIds: List<String>,
     unreadNotificationCount: Int = 0,
     unreadMessageCount: Int = 0,
     onExamSelected: (String) -> Unit,
@@ -63,21 +65,21 @@ fun FeedScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(currentUser.examType) {
-        if (currentUser.examType.isNotEmpty()) {
-            viewModel.updateSubjectsForExam(currentUser.examType)
+    LaunchedEffect(examType) {
+        if (examType.isNotEmpty()) {
+            viewModel.updateSubjectsForExam(examType)
         }
     }
 
-    LaunchedEffect(currentUser.following) {
-        viewModel.updateFollowingList(currentUser.following)
+    LaunchedEffect(myFollowingUserIds) {
+        viewModel.updateFollowingList(myFollowingUserIds)
     }
 
-    LaunchedEffect(currentUser.blockedUsers) {
-        viewModel.updateBlockedList(currentUser.blockedUsers)
+    LaunchedEffect(myBlockedUserIds) {
+        viewModel.updateBlockedList(myBlockedUserIds)
     }
 
-    if (currentUser.examType.isEmpty() && currentUser.uid.isNotEmpty()) {
+    if (examType.isEmpty() && currentUser.id.isNotEmpty()) {
         ExamSelectionDialog(
             onExamSelected = { selectedExam ->
                 onExamSelected(selectedExam)
@@ -350,30 +352,26 @@ fun FeedScreen(
                             items(state.questions) { question ->
                                 QuestionCard(
                                     question = question,
-                                    currentUserId = currentUser.uid,
+                                    currentUserId = currentUser.id,
                                     isFollowingAuthor = followingUserIds.contains(question.authorId),
                                     onCardClick = { onNavigateToQuestionDetail(question.id) },
                                     onAuthorClick = { onNavigateToProfile(question.authorId) },
                                     onLikeClick = {
-                                        val isLiked = question.likedBy.contains(currentUser.uid)
-                                        viewModel.toggleLike(
-                                            question.id,
-                                            UserSummary(id = currentUser.uid, displayName = currentUser.displayName, avatarUrl = currentUser.photoUrl),
-                                            isLiked
-                                        )
+                                        val isLiked = question.likedBy.contains(currentUser.id)
+                                        viewModel.toggleLike(question.id, currentUser, isLiked)
                                     },
                                     onFollowToggleClick = {
                                         val isFollowing = followingUserIds.contains(question.authorId)
                                         viewModel.toggleFollowUser(
-                                            currentUserId = currentUser.uid,
+                                            currentUserId = currentUser.id,
                                             targetUserId = question.authorId,
                                             isCurrentlyFollowing = isFollowing,
                                             currentUserName = currentUser.displayName,
-                                            currentUserPhotoUrl = currentUser.photoUrl
+                                            currentUserPhotoUrl = currentUser.avatarUrl ?: ""
                                         )
                                     },
                                     onDeleteQuestionClick = {
-                                        viewModel.deleteQuestion(question.id, currentUser.uid)
+                                        viewModel.deleteQuestion(question.id, currentUser.id)
                                     },
                                     onReportQuestionClick = {
                                         questionToReport = question
@@ -399,7 +397,7 @@ fun FeedScreen(
                     scope.launch {
                         questionRepo.reportQuestion(
                             questionId = q.id,
-                            reporterId = currentUser.uid,
+                            reporterId = currentUser.id,
                             reason = reason,
                             note = note
                         ).onSuccess {

@@ -19,7 +19,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cotx.app.data.model.ChatMessage
-import com.cotx.app.data.model.User
 import com.cotx.app.data.repository.AuthRepository
 import com.cotx.app.data.repository.ChatRepository
 import com.cotx.app.domain.model.UserSummary
@@ -43,7 +42,7 @@ fun DirectMessageScreen(
     var messageText by remember { mutableStateOf("") }
     var showEmojiPicker by remember { mutableStateOf(false) }
     var messages by remember { mutableStateOf<List<ChatMessage>>(emptyList()) }
-    var receiverUser by remember { mutableStateOf<User?>(null) }
+    var hasBlockedMe by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
@@ -51,7 +50,6 @@ fun DirectMessageScreen(
     var showTopMenu by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    val hasBlockedMe = receiverUser?.blockedUsers?.contains(currentUser.id) == true
     val isChatBlocked = isBlockedByMe || hasBlockedMe
 
     val roomId = remember(currentUser.id, receiverId) {
@@ -60,7 +58,7 @@ fun DirectMessageScreen(
 
     LaunchedEffect(receiverId) {
         authRepository.getUserProfile(receiverId).onSuccess { userObj ->
-            receiverUser = userObj
+            hasBlockedMe = userObj?.blockedUsers?.contains(currentUser.id) == true
         }
     }
 
