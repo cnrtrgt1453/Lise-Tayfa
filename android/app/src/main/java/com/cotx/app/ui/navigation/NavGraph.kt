@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.cotx.app.data.model.User
+import com.cotx.app.domain.model.UserSummary
 import com.cotx.app.ui.screens.auth.LoginScreen
 import com.cotx.app.ui.screens.auth.RegisterScreen
 import com.cotx.app.ui.screens.chat.DirectMessageScreen
@@ -163,7 +164,8 @@ fun CotxNavGraph(
             DirectMessageScreen(
                 receiverId = receiverId,
                 receiverName = receiverName,
-                currentUser = user,
+                currentUser = UserSummary(id = user.uid, displayName = user.displayName, avatarUrl = user.photoUrl),
+                isBlockedByMe = user.blockedUsers.contains(receiverId),
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -172,7 +174,7 @@ fun CotxNavGraph(
             val user = currentUser ?: User(displayName = "Öğrenci")
             MessagesMainScreen(
                 viewModel = chatViewModel,
-                currentUser = user,
+                currentUser = UserSummary(id = user.uid, displayName = user.displayName, avatarUrl = user.photoUrl),
                 unreadNotificationCount = unreadNotificationCount,
                 unreadMessageCount = unreadMessageCount,
                 onNavigateToPrivateDM = { receiverId, receiverName ->
@@ -209,12 +211,11 @@ fun CotxNavGraph(
             })
         ) { backStackEntry ->
             val targetUserId = backStackEntry.arguments?.getString("userId")
-            val user = currentUser ?: User(displayName = "Öğrenci")
+            val myUserId = currentUser?.uid ?: ""
 
             ProfileScreen(
-                currentUserId = user.uid,
+                currentUserId = myUserId,
                 targetUserId = targetUserId,
-                user = user,
                 unreadNotificationCount = unreadNotificationCount,
                 unreadMessageCount = unreadMessageCount,
                 onNavigateToEditProfile = {
@@ -239,11 +240,11 @@ fun CotxNavGraph(
                     navController.navigate(Screen.DirectMessage.createRoute(receiverId, receiverName))
                 },
                 onNavigateToDMList = {
-                    if (user.uid.isNotEmpty()) chatViewModel.markAllConversationsAsRead(user.uid)
+                    if (myUserId.isNotEmpty()) chatViewModel.markAllConversationsAsRead(myUserId)
                     navController.navigate(Screen.Messages.route)
                 },
                 onNavigateToNotifications = {
-                    if (user.uid.isNotEmpty()) notificationViewModel.markAllAsRead(user.uid)
+                    if (myUserId.isNotEmpty()) notificationViewModel.markAllAsRead(myUserId)
                     navController.navigate(Screen.Notifications.route)
                 },
                 onNavigateToQuestionDetail = { questionId ->
@@ -267,11 +268,11 @@ fun CotxNavGraph(
         }
 
         composable(Screen.EditProfile.route) {
-            val user = currentUser ?: User(displayName = "Öğrenci")
+            val myUserId = currentUser?.uid ?: ""
             val context = androidx.compose.ui.platform.LocalContext.current
 
             EditProfileScreen(
-                user = user,
+                userId = myUserId,
                 onUpdateProfile = { displayName, bio, field, examType, targetSchool, targetDepartment, visibleBadges, newImageUri, onFinished ->
                     authViewModel.updateProfile(
                         context = context,

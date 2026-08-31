@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.cotx.app.data.model.Question
 import com.cotx.app.data.model.User
+import com.cotx.app.domain.model.UserSummary
 import com.cotx.app.ui.components.CotxBottomBar
 import com.cotx.app.ui.components.CotxBottomTab
 import com.cotx.app.ui.components.ExamSelectionDialog
@@ -355,7 +356,11 @@ fun FeedScreen(
                                     onAuthorClick = { onNavigateToProfile(question.authorId) },
                                     onLikeClick = {
                                         val isLiked = question.likedBy.contains(currentUser.uid)
-                                        viewModel.toggleLike(question.id, currentUser, isLiked)
+                                        viewModel.toggleLike(
+                                            question.id,
+                                            UserSummary(id = currentUser.uid, displayName = currentUser.displayName, avatarUrl = currentUser.photoUrl),
+                                            isLiked
+                                        )
                                     },
                                     onFollowToggleClick = {
                                         val isFollowing = followingUserIds.contains(question.authorId)

@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cotx.app.data.model.ChatConversation
 import com.cotx.app.data.model.ChatMessage
-import com.cotx.app.data.model.User
 import com.cotx.app.data.repository.ChatRepository
+import com.cotx.app.domain.model.UserSummary
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -92,13 +92,13 @@ class ChatViewModel(
         }
     }
 
-    fun sendGlobalMessage(currentUser: User, text: String) {
+    fun sendGlobalMessage(currentUser: UserSummary, text: String) {
         if (text.isBlank()) return
         viewModelScope.launch {
             chatRepository.sendGlobalMessage(
-                senderId = currentUser.uid,
+                senderId = currentUser.id,
                 senderName = currentUser.displayName.ifEmpty { "Öğrenci" },
-                senderPhotoUrl = currentUser.photoUrl,
+                senderPhotoUrl = currentUser.avatarUrl ?: "",
                 text = text
             )
         }

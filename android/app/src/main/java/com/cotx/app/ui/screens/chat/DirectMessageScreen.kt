@@ -22,6 +22,7 @@ import com.cotx.app.data.model.ChatMessage
 import com.cotx.app.data.model.User
 import com.cotx.app.data.repository.AuthRepository
 import com.cotx.app.data.repository.ChatRepository
+import com.cotx.app.domain.model.UserSummary
 import com.cotx.app.ui.theme.PrimaryPurple
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.launch
@@ -33,7 +34,8 @@ fun DirectMessageScreen(
     receiverId: String,
     receiverName: String,
     receiverPhotoUrl: String = "",
-    currentUser: User,
+    currentUser: UserSummary,
+    isBlockedByMe: Boolean,
     authRepository: AuthRepository = remember { AuthRepository() },
     chatRepository: ChatRepository = remember { ChatRepository() },
     onNavigateBack: () -> Unit
@@ -49,12 +51,11 @@ fun DirectMessageScreen(
     var showTopMenu by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    val isBlockedByMe = currentUser.blockedUsers.contains(receiverId)
-    val hasBlockedMe = receiverUser?.blockedUsers?.contains(currentUser.uid) == true
+    val hasBlockedMe = receiverUser?.blockedUsers?.contains(currentUser.id) == true
     val isChatBlocked = isBlockedByMe || hasBlockedMe
 
-    val roomId = remember(currentUser.uid, receiverId) {
-        chatRepository.getRoomId(currentUser.uid, receiverId)
+    val roomId = remember(currentUser.id, receiverId) {
+        chatRepository.getRoomId(currentUser.id, receiverId)
     }
 
     LaunchedEffect(receiverId) {
@@ -64,17 +65,17 @@ fun DirectMessageScreen(
     }
 
     LaunchedEffect(roomId) {
-        if (currentUser.uid.isNotEmpty() && roomId.isNotEmpty()) {
-            chatRepository.markConversationAsRead(currentUser.uid, roomId)
+        if (currentUser.id.isNotEmpty() && roomId.isNotEmpty()) {
+            chatRepository.markConversationAsRead(currentUser.id, roomId)
         }
     }
 
     DisposableEffect(roomId) {
         val listener: ListenerRegistration = chatRepository.listenPrivateMessages(roomId) { list ->
             messages = list
-            if (currentUser.uid.isNotEmpty()) {
+            if (currentUser.id.isNotEmpty()) {
                 coroutineScope.launch {
-                    chatRepository.markConversationAsRead(currentUser.uid, roomId)
+                    chatRepository.markConversationAsRead(currentUser.id, roomId)
                 }
             }
         }
@@ -132,7 +133,7 @@ fun DirectMessageScreen(
                 coroutineScope.launch {
                     authRepository.reportUser(
                         targetUserId = receiverId,
-                        reporterId = currentUser.uid,
+                        reporterId = currentUser.id,
                         reason = reason,
                         note = note
                     ).onSuccess {
@@ -176,7 +177,7 @@ fun DirectMessageScreen(
                                     onClick = {
                                         showTopMenu = false
                                         coroutineScope.launch {
-                                            authRepository.blockUser(currentUser.uid, receiverId).onSuccess {
+                                            authRepository.blockUser(currentUser.id, receiverId).onSuccess {
                                                 android.widget.Toast.makeText(context, "Kullanıcı engellendi.", android.widget.Toast.LENGTH_SHORT).show()
                                                 onNavigateBack()
                                             }
@@ -242,9 +243,9 @@ fun DirectMessageScreen(
                                         showEmojiPicker = false
                                         coroutineScope.launch {
                                             chatRepository.sendPrivateMessage(
-                                                senderId = currentUser.uid,
+                                                senderId = currentUser.id,
                                                 senderName = currentUser.displayName.ifEmpty { "Öğrenci" },
-                                                senderPhotoUrl = currentUser.photoUrl,
+                                                senderPhotoUrl = currentUser.avatarUrl ?: "",
                                                 receiverId = receiverId,
                                                 receiverName = receiverName,
                                                 receiverPhotoUrl = receiverPhotoUrl,
@@ -310,7 +311,7 @@ fun DirectMessageScreen(
                 item(key = msg.id) {
                     MessageBubble(
                         message = msg,
-                        isMine = msg.senderId == currentUser.uid,
+                        isMine = msg.senderId == currentUser.id,
                         onDelete = { messageToDelete = msg }
                     )
                 }

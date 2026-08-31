@@ -1,0 +1,410 @@
+{
+  "android/app/build.gradle.kts": {
+    "mtime": 1788015666.2532675,
+    "seen": 1788157803.5718527,
+    "ast_hash": "d62c59d0900f3874cb7ad7ca445d6c6a",
+    "semantic_hash": "d62c59d0900f3874cb7ad7ca445d6c6a"
+  },
+  "android/app/google-services.json": {
+    "mtime": 1787982638.4871855,
+    "seen": 1788157803.5718527,
+    "ast_hash": "9e503c4e01799051883fe2a56a55179f",
+    "semantic_hash": "9e503c4e01799051883fe2a56a55179f"
+  },
+  "android/app/src/main/java/com/cotx/app/MainActivity.kt": {
+    "mtime": 1787230610.1187253,
+    "seen": 1788157803.5718527,
+    "ast_hash": "8e7c8afe6ea2dbb32aff334baaa2e206",
+    "semantic_hash": "8e7c8afe6ea2dbb32aff334baaa2e206"
+  },
+  "android/app/src/main/java/com/cotx/app/data/model/ChatConversation.kt": {
+    "mtime": 1787564089.5551834,
+    "seen": 1788157803.5718527,
+    "ast_hash": "63ce58f05352a2859250f226bd455084",
+    "semantic_hash": "63ce58f05352a2859250f226bd455084"
+  },
+  "android/app/src/main/java/com/cotx/app/data/model/ChatMessage.kt": {
+    "mtime": 1787471666.6836936,
+    "seen": 1788157803.5718527,
+    "ast_hash": "8054be00320a299c487c5b794ed9f927",
+    "semantic_hash": "8054be00320a299c487c5b794ed9f927"
+  },
+  "android/app/src/main/java/com/cotx/app/data/model/DirectMessage.kt": {
+    "mtime": 1787230380.6316638,
+    "seen": 1788157803.5718527,
+    "ast_hash": "96cbc8f32efef40f48efb79b66f54a52",
+    "semantic_hash": "96cbc8f32efef40f48efb79b66f54a52"
+  },
+  "android/app/src/main/java/com/cotx/app/data/model/Notification.kt": {
+    "mtime": 1787564094.212693,
+    "seen": 1788157803.5718527,
+    "ast_hash": "ee1f2ba61bb3f091f0a018a118d8eeb2",
+    "semantic_hash": "ee1f2ba61bb3f091f0a018a118d8eeb2"
+  },
+  "android/app/src/main/java/com/cotx/app/data/model/Question.kt": {
+    "mtime": 1787400992.2368374,
+    "seen": 1788157803.5718527,
+    "ast_hash": "cef034b825ab75e926d36716e73a5469",
+    "semantic_hash": "cef034b825ab75e926d36716e73a5469"
+  },
+  "android/app/src/main/java/com/cotx/app/data/model/Solution.kt": {
+    "mtime": 1787230372.4464915,
+    "seen": 1788157803.5718527,
+    "ast_hash": "ebfe4bac73e31e2bece53b5cab614ea8",
+    "semantic_hash": "ebfe4bac73e31e2bece53b5cab614ea8"
+  },
+  "android/app/src/main/java/com/cotx/app/data/model/User.kt": {
+    "mtime": 1787472256.7530177,
+    "seen": 1788157803.5718527,
+    "ast_hash": "fe2b835f827d24660c04c0b2013f9a66",
+    "semantic_hash": "fe2b835f827d24660c04c0b2013f9a66"
+  },
+  "android/app/src/main/java/com/cotx/app/data/repository/AuthRepository.kt": {
+    "mtime": 1788014439.1372347,
+    "seen": 1788157803.5718527,
+    "ast_hash": "8911093a03d3f70f2d13537f0d0dacb9",
+    "semantic_hash": "8911093a03d3f70f2d13537f0d0dacb9"
+  },
+  "android/app/src/main/java/com/cotx/app/data/repository/ChatRepository.kt": {
+    "mtime": 1787564478.2136714,
+    "seen": 1788157803.5718527,
+    "ast_hash": "19c8f9306fc82c7d9b08ec24538cd8ef",
+    "semantic_hash": "19c8f9306fc82c7d9b08ec24538cd8ef"
+  },
+  "android/app/src/main/java/com/cotx/app/data/repository/NotificationRepository.kt": {
+    "mtime": 1787562870.302022,
+    "seen": 1788157803.5718527,
+    "ast_hash": "c530ceaa23ed1cfc47d702c61f8047ab",
+    "semantic_hash": "c530ceaa23ed1cfc47d702c61f8047ab"
+  },
+  "android/app/src/main/java/com/cotx/app/data/repository/QuestionRepository.kt": {
+    "mtime": 1787674472.459292,
+    "seen": 1788157803.5718527,
+    "ast_hash": "6f8238b5d238ebb02e8c258d5b868d82",
+    "semantic_hash": "6f8238b5d238ebb02e8c258d5b868d82"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/components/AcademicBackground.kt": {
+    "mtime": 1787392851.6905115,
+    "seen": 1788157803.5718527,
+    "ast_hash": "ee16c5a85d442f833e82ff27354487f2",
+    "semantic_hash": "ee16c5a85d442f833e82ff27354487f2"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/components/CotxBottomBar.kt": {
+    "mtime": 1787569777.4675808,
+    "seen": 1788157803.5718527,
+    "ast_hash": "e9784c141586e068fee0e4111a7d2c35",
+    "semantic_hash": "e9784c141586e068fee0e4111a7d2c35"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/components/EmojiPickerPanel.kt": {
+    "mtime": 1787567253.97867,
+    "seen": 1788157803.5718527,
+    "ast_hash": "074324934927cb7f5bedbdfa078a8b45",
+    "semantic_hash": "074324934927cb7f5bedbdfa078a8b45"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/components/ExamSelectionDialog.kt": {
+    "mtime": 1787400849.2804601,
+    "seen": 1788157803.5718527,
+    "ast_hash": "f246311a300f4de25cce8b1ceb9bdd73",
+    "semantic_hash": "f246311a300f4de25cce8b1ceb9bdd73"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/components/ReportDialog.kt": {
+    "mtime": 1787674484.0620377,
+    "seen": 1788157803.5718527,
+    "ast_hash": "3c51be6b58250464c45caafa02e52fc4",
+    "semantic_hash": "3c51be6b58250464c45caafa02e52fc4"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/navigation/NavGraph.kt": {
+    "mtime": 1787574856.9283483,
+    "seen": 1788157803.5718527,
+    "ast_hash": "a2f1ca98cff748e51fd40ea72e99577e",
+    "semantic_hash": "a2f1ca98cff748e51fd40ea72e99577e"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/navigation/Screen.kt": {
+    "mtime": 1787471706.6760647,
+    "seen": 1788157803.5718527,
+    "ast_hash": "21f4d16c83e3d3f10136ac344763e19f",
+    "semantic_hash": "21f4d16c83e3d3f10136ac344763e19f"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/screens/auth/LoginScreen.kt": {
+    "mtime": 1788000678.3758905,
+    "seen": 1788157803.5718527,
+    "ast_hash": "abddffc8d1fcae808f0b08991b710efb",
+    "semantic_hash": "abddffc8d1fcae808f0b08991b710efb"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/screens/auth/RegisterScreen.kt": {
+    "mtime": 1788000710.4553976,
+    "seen": 1788157803.5718527,
+    "ast_hash": "ce63120a618ef9eb21751a84b8a503b8",
+    "semantic_hash": "ce63120a618ef9eb21751a84b8a503b8"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/screens/chat/DirectMessageScreen.kt": {
+    "mtime": 1787675889.4675486,
+    "seen": 1788157803.5718527,
+    "ast_hash": "dafdfc10921a9aa48392acc665afe90d",
+    "semantic_hash": "dafdfc10921a9aa48392acc665afe90d"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/screens/chat/MessagesMainScreen.kt": {
+    "mtime": 1787567284.3499775,
+    "seen": 1788157803.5718527,
+    "ast_hash": "a4ecf78697bc56831df1643f341062aa",
+    "semantic_hash": "a4ecf78697bc56831df1643f341062aa"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/screens/feed/FeedScreen.kt": {
+    "mtime": 1787675987.6575372,
+    "seen": 1788157803.5718527,
+    "ast_hash": "b6fbeafad947efef6bfd1b185a74db9f",
+    "semantic_hash": "b6fbeafad947efef6bfd1b185a74db9f"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/screens/notification/NotificationScreen.kt": {
+    "mtime": 1787563285.821201,
+    "seen": 1788157803.5718527,
+    "ast_hash": "100cff22d756088752a949d2690b74d8",
+    "semantic_hash": "100cff22d756088752a949d2690b74d8"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/screens/profile/EditProfileScreen.kt": {
+    "mtime": 1787674553.3440359,
+    "seen": 1788157803.5718527,
+    "ast_hash": "68c042d284bbec663a54bb30f0223bac",
+    "semantic_hash": "68c042d284bbec663a54bb30f0223bac"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/screens/profile/ProfileScreen.kt": {
+    "mtime": 1787674576.0891194,
+    "seen": 1788157803.5718527,
+    "ast_hash": "6656c66d0792183698dee51cf34742c5",
+    "semantic_hash": "6656c66d0792183698dee51cf34742c5"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/screens/question/AddQuestionScreen.kt": {
+    "mtime": 1787674489.7429533,
+    "seen": 1788157803.5718527,
+    "ast_hash": "c7d4e5c8adefdaeffb0be2ff3b4de36c",
+    "semantic_hash": "c7d4e5c8adefdaeffb0be2ff3b4de36c"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/screens/question/QuestionDetailScreen.kt": {
+    "mtime": 1787675899.1687884,
+    "seen": 1788157803.5718527,
+    "ast_hash": "c3f03f687d73cc95c22c9be1fa7322f3",
+    "semantic_hash": "c3f03f687d73cc95c22c9be1fa7322f3"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/theme/Color.kt": {
+    "mtime": 1787353212.2029538,
+    "seen": 1788157803.5718527,
+    "ast_hash": "c6ee7923c8f51ebd18cbeb4ceab874fb",
+    "semantic_hash": "c6ee7923c8f51ebd18cbeb4ceab874fb"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/theme/Theme.kt": {
+    "mtime": 1787230455.48087,
+    "seen": 1788157803.5718527,
+    "ast_hash": "57dc3b22257c0987db9cdd9e501e76fa",
+    "semantic_hash": "57dc3b22257c0987db9cdd9e501e76fa"
+  },
+  "android/app/src/main/java/com/cotx/app/ui/theme/Type.kt": {
+    "mtime": 1787230443.7925675,
+    "seen": 1788157803.5718527,
+    "ast_hash": "5768d9ee26faba2a976c6f854a0e0939",
+    "semantic_hash": "5768d9ee26faba2a976c6f854a0e0939"
+  },
+  "android/app/src/main/java/com/cotx/app/util/BadgeHelper.kt": {
+    "mtime": 1787465643.6106877,
+    "seen": 1788157803.5718527,
+    "ast_hash": "01cde01cddb8876aa06be4cc5cc4d09d",
+    "semantic_hash": "01cde01cddb8876aa06be4cc5cc4d09d"
+  },
+  "android/app/src/main/java/com/cotx/app/util/ExamSubjectHelper.kt": {
+    "mtime": 1787400854.3308446,
+    "seen": 1788157803.5718527,
+    "ast_hash": "19857587825a4d08a69503b332588597",
+    "semantic_hash": "19857587825a4d08a69503b332588597"
+  },
+  "android/app/src/main/java/com/cotx/app/util/GoogleCredentialAuth.kt": {
+    "mtime": 1788000630.1430097,
+    "seen": 1788157803.5718527,
+    "ast_hash": "77ca604222f4d5a3fb4242985f82213e",
+    "semantic_hash": "77ca604222f4d5a3fb4242985f82213e"
+  },
+  "android/app/src/main/java/com/cotx/app/util/ImageCompressor.kt": {
+    "mtime": 1787561642.311559,
+    "seen": 1788157803.5728543,
+    "ast_hash": "9b8c9cf902d7d6c9ed430218303319d6",
+    "semantic_hash": "9b8c9cf902d7d6c9ed430218303319d6"
+  },
+  "android/app/src/main/java/com/cotx/app/util/ImageModelResolver.kt": {
+    "mtime": 1787561653.421893,
+    "seen": 1788157803.5728543,
+    "ast_hash": "c72c1e2605db045002ff795e2365d96f",
+    "semantic_hash": "c72c1e2605db045002ff795e2365d96f"
+  },
+  "android/app/src/main/java/com/cotx/app/util/ProfanityFilter.kt": {
+    "mtime": 1787550909.9779558,
+    "seen": 1788157803.5728543,
+    "ast_hash": "148702f440cc2174bc2b8af5473ce2a1",
+    "semantic_hash": "148702f440cc2174bc2b8af5473ce2a1"
+  },
+  "android/app/src/main/java/com/cotx/app/viewmodel/AddQuestionViewModel.kt": {
+    "mtime": 1787401018.1936822,
+    "seen": 1788157803.5728543,
+    "ast_hash": "5c0b4ee35ddd935591344a26c6d123c9",
+    "semantic_hash": "5c0b4ee35ddd935591344a26c6d123c9"
+  },
+  "android/app/src/main/java/com/cotx/app/viewmodel/AuthViewModel.kt": {
+    "mtime": 1788014841.1587949,
+    "seen": 1788157803.5728543,
+    "ast_hash": "29662d3fd88e2b7c5fd0858ab3673413",
+    "semantic_hash": "29662d3fd88e2b7c5fd0858ab3673413"
+  },
+  "android/app/src/main/java/com/cotx/app/viewmodel/ChatViewModel.kt": {
+    "mtime": 1787564488.1600425,
+    "seen": 1788157803.5728543,
+    "ast_hash": "2c1d781e6531f3e3236e2e8761bc1906",
+    "semantic_hash": "2c1d781e6531f3e3236e2e8761bc1906"
+  },
+  "android/app/src/main/java/com/cotx/app/viewmodel/FeedViewModel.kt": {
+    "mtime": 1787548740.422383,
+    "seen": 1788157803.5728543,
+    "ast_hash": "4346ae02fa9d218a58c8779f3aac0365",
+    "semantic_hash": "4346ae02fa9d218a58c8779f3aac0365"
+  },
+  "android/app/src/main/java/com/cotx/app/viewmodel/NotificationViewModel.kt": {
+    "mtime": 1787562877.0891094,
+    "seen": 1788157803.5728543,
+    "ast_hash": "81d8c2e2173f1b2dd430854fee5bc501",
+    "semantic_hash": "81d8c2e2173f1b2dd430854fee5bc501"
+  },
+  "android/build.gradle.kts": {
+    "mtime": 1787309497.712428,
+    "seen": 1788157803.5728543,
+    "ast_hash": "799a44881c9c1bf5beab0fbea533ca72",
+    "semantic_hash": "799a44881c9c1bf5beab0fbea533ca72"
+  },
+  "android/gradlew": {
+    "mtime": 1787309648.9101994,
+    "seen": 1788157803.5728543,
+    "ast_hash": "266606e78242737ef3da02a80ea0564d",
+    "semantic_hash": "266606e78242737ef3da02a80ea0564d"
+  },
+  "android/settings.gradle.kts": {
+    "mtime": 1787230308.9932969,
+    "seen": 1788157803.5728543,
+    "ast_hash": "37a8235638e78bba32b04f6565511147",
+    "semantic_hash": "37a8235638e78bba32b04f6565511147"
+  },
+  "GOOGLE_SIGNIN_DEVELOPER_ERROR_10_COZUM_REHBERI.md": {
+    "mtime": 1787996827.7442653,
+    "seen": 1788157803.5728543,
+    "ast_hash": "940139d46149a09c562a697747064f1d",
+    "semantic_hash": "940139d46149a09c562a697747064f1d"
+  },
+  "PLAY_STORE_YAYINLAMA_REHBERI.md": {
+    "mtime": 1787735707.1972268,
+    "seen": 1788157803.5728543,
+    "ast_hash": "11a77f2d6c7fcc2cc811010f22b418a3",
+    "semantic_hash": "11a77f2d6c7fcc2cc811010f22b418a3"
+  },
+  "PRIVACY_POLICY.md": {
+    "mtime": 1787735697.4855444,
+    "seen": 1788157803.5728543,
+    "ast_hash": "cd3b74ac5e7d11f28521fb1882296c89",
+    "semantic_hash": "cd3b74ac5e7d11f28521fb1882296c89"
+  },
+  "PROJE_NOTLARI.md": {
+    "mtime": 1787255659.1462245,
+    "seen": 1788157803.5728543,
+    "ast_hash": "887d1e67f500ea44197d277dae3fca67",
+    "semantic_hash": "887d1e67f500ea44197d277dae3fca67"
+  },
+  "PROJE_TEKNIK_PLAN_VE_NOTLAR.md": {
+    "mtime": 1787258154.9173522,
+    "seen": 1788157803.5728543,
+    "ast_hash": "6735685ced16d2090ab80091599ecb37",
+    "semantic_hash": "6735685ced16d2090ab80091599ecb37"
+  },
+  "SIBER_GUVENLIK_TASKLIST.md": {
+    "mtime": 1787674964.37918,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b0eab9374d3cea9a2f3e0a84e4c90af8",
+    "semantic_hash": "b0eab9374d3cea9a2f3e0a84e4c90af8"
+  },
+  "android/README.md": {
+    "mtime": 1787230648.474499,
+    "seen": 1788157803.5728543,
+    "ast_hash": "d8e8f04dea5806f5e430858b7975b18f",
+    "semantic_hash": "d8e8f04dea5806f5e430858b7975b18f"
+  },
+  "android/app/src/main/res/drawable/app_logo.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "android/app/src/main/res/drawable/ic_launcher_foreground.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "android/app/src/main/res/mipmap-hdpi/ic_launcher.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "android/app/src/main/res/mipmap-mdpi/ic_launcher.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png": {
+    "mtime": 1787576851.3673048,
+    "seen": 1788157803.5728543,
+    "ast_hash": "b72d5dab6590c5638dea30f2b6d0e9a5",
+    "semantic_hash": "b72d5dab6590c5638dea30f2b6d0e9a5"
+  },
+  "cotx_feature_graphic_1024x500.png": {
+    "mtime": 1787739862.0562034,
+    "seen": 1788157803.5728543,
+    "ast_hash": "c3747806fa73c8c23a7a6ea23676f937",
+    "semantic_hash": "c3747806fa73c8c23a7a6ea23676f937"
+  }
+}

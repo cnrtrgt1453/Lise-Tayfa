@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.cotx.app.data.model.User
+import com.cotx.app.data.repository.AuthRepository
 import com.cotx.app.ui.theme.PrimaryPurple
 import com.cotx.app.ui.theme.SecondaryOrange
 import com.cotx.app.util.BadgeHelper
@@ -34,7 +35,7 @@ import com.cotx.app.util.BadgeHelper
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
-    user: User,
+    userId: String,
     onUpdateProfile: (
         displayName: String,
         bio: String,
@@ -48,6 +49,43 @@ fun EditProfileScreen(
     ) -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    val authRepository = remember { AuthRepository() }
+    var loadedUser by remember { mutableStateOf<User?>(null) }
+    var isLoadingUser by remember { mutableStateOf(true) }
+
+    LaunchedEffect(userId) {
+        authRepository.getUserProfile(userId).onSuccess { fetchedUser ->
+            loadedUser = fetchedUser
+            isLoadingUser = false
+        }.onFailure {
+            isLoadingUser = false
+        }
+    }
+
+    val user = loadedUser
+    if (isLoadingUser || user == null) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Profili Düzenle ✏️", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = PrimaryPurple)
+            }
+        }
+        return
+    }
+
     var displayName by remember { mutableStateOf(user.displayName) }
     var bio by remember { mutableStateOf(user.bio) }
     var selectedExamType by remember { mutableStateOf(user.examType.ifEmpty { "TYT/AYT" }) }

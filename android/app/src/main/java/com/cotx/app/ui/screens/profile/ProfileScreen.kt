@@ -37,7 +37,6 @@ import kotlinx.coroutines.launch
 fun ProfileScreen(
     currentUserId: String,
     targetUserId: String? = null,
-    user: User,
     unreadNotificationCount: Int = 0,
     unreadMessageCount: Int = 0,
     onNavigateToEditProfile: () -> Unit,
@@ -60,12 +59,15 @@ fun ProfileScreen(
     val effectiveTargetUserId = if (targetUserId.isNullOrEmpty()) currentUserId else targetUserId
     val isOwnProfile = effectiveTargetUserId == currentUserId
 
-    var displayedUser by remember(effectiveTargetUserId, user) { mutableStateOf(if (isOwnProfile) user else user) }
+    // The acting/session identity (uid, displayName, photoUrl) used to attribute
+    // follow/like/report mutations - fetched here rather than passed in from NavGraph.
+    var myUser by remember(currentUserId) { mutableStateOf(User(uid = currentUserId, displayName = "Öğrenci")) }
+    var displayedUser by remember(effectiveTargetUserId) { mutableStateOf(User(uid = effectiveTargetUserId, displayName = "Öğrenci")) }
     var userQuestions by remember(effectiveTargetUserId) { mutableStateOf<List<Question>>(emptyList()) }
     var isLoadingQuestions by remember(effectiveTargetUserId) { mutableStateOf(true) }
 
-    var currentUserFollowing by remember(user.following) { mutableStateOf(user.following) }
-    var currentUserBlockedList by remember(user.blockedUsers) { mutableStateOf(user.blockedUsers) }
+    var currentUserFollowing by remember(myUser.following) { mutableStateOf(myUser.following) }
+    var currentUserBlockedList by remember(myUser.blockedUsers) { mutableStateOf(myUser.blockedUsers) }
     val isFollowingTarget = currentUserFollowing.contains(displayedUser.uid)
     val isTargetBlocked = currentUserBlockedList.contains(displayedUser.uid)
 
@@ -87,13 +89,15 @@ fun ProfileScreen(
     var blockedUsersList by remember { mutableStateOf<List<User>>(emptyList()) }
     var isBlockedModalLoading by remember { mutableStateOf(false) }
 
-    // Fetch Target User Info & Questions
-    LaunchedEffect(effectiveTargetUserId, user) {
+    // Fetch acting-user identity (for mutation attribution) + Target User Info & Questions
+    LaunchedEffect(currentUserId, effectiveTargetUserId) {
+        val myProfileResult = authRepository.getCurrentUserProfile()
+        myProfileResult.onSuccess { fetchedUser ->
+            if (fetchedUser != null) myUser = fetchedUser
+        }
+
         if (isOwnProfile) {
-            displayedUser = user
-            currentUserFollowing = user.following
-            currentUserBlockedList = user.blockedUsers
-            authRepository.getCurrentUserProfile().onSuccess { fetchedUser ->
+            myProfileResult.onSuccess { fetchedUser ->
                 if (fetchedUser != null) {
                     displayedUser = fetchedUser
                     currentUserFollowing = fetchedUser.following
@@ -378,8 +382,8 @@ fun ProfileScreen(
                                                  authRepository.followUser(
                                                      currentUserId = currentUserId,
                                                      targetUserId = displayedUser.uid,
-                                                     currentUserName = user.displayName,
-                                                     currentUserPhotoUrl = user.photoUrl
+                                                     currentUserName = myUser.displayName,
+                                                     currentUserPhotoUrl = myUser.photoUrl
                                                  ).onSuccess {
                                                     currentUserFollowing = currentUserFollowing + displayedUser.uid
                                                     displayedUser = displayedUser.copy(followers = displayedUser.followers + currentUserId)
@@ -541,8 +545,8 @@ fun ProfileScreen(
                                 questionRepository.toggleLikeQuestion(
                                     questionId = question.id,
                                     userId = currentUserId,
-                                    userName = user.displayName,
-                                    userPhotoUrl = user.photoUrl,
+                                    userName = myUser.displayName,
+                                    userPhotoUrl = myUser.photoUrl,
                                     isLiked = isLiked
                                 )
                                 questionRepository.getUserQuestions(effectiveTargetUserId).onSuccess { userQuestions = it }
@@ -558,8 +562,8 @@ fun ProfileScreen(
                                      authRepository.followUser(
                                          currentUserId = currentUserId,
                                          targetUserId = question.authorId,
-                                         currentUserName = user.displayName,
-                                         currentUserPhotoUrl = user.photoUrl
+                                         currentUserName = myUser.displayName,
+                                         currentUserPhotoUrl = myUser.photoUrl
                                      ).onSuccess {
                                         currentUserFollowing = currentUserFollowing + question.authorId
                                     }

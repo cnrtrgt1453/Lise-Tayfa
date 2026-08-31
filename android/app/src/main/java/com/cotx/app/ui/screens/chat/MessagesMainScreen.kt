@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.cotx.app.data.model.ChatConversation
 import com.cotx.app.data.model.ChatMessage
-import com.cotx.app.data.model.User
+import com.cotx.app.domain.model.UserSummary
 import com.cotx.app.ui.components.CotxBottomBar
 import com.cotx.app.ui.components.CotxBottomTab
 import com.cotx.app.ui.theme.PrimaryPurple
@@ -42,7 +42,7 @@ import java.util.Locale
 @Composable
 fun MessagesMainScreen(
     viewModel: ChatViewModel,
-    currentUser: User,
+    currentUser: UserSummary,
     unreadNotificationCount: Int = 0,
     unreadMessageCount: Int = 0,
     onNavigateToPrivateDM: (receiverId: String, receiverName: String) -> Unit,
@@ -59,10 +59,10 @@ fun MessagesMainScreen(
     var showEmojiPicker by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
-    LaunchedEffect(currentUser.uid) {
-        if (currentUser.uid.isNotEmpty()) {
-            viewModel.initListeners(currentUser.uid)
-            viewModel.markAllConversationsAsRead(currentUser.uid)
+    LaunchedEffect(currentUser.id) {
+        if (currentUser.id.isNotEmpty()) {
+            viewModel.initListeners(currentUser.id)
+            viewModel.markAllConversationsAsRead(currentUser.id)
         }
     }
 
@@ -170,7 +170,7 @@ fun MessagesMainScreen(
                             items(globalMessages) { msg ->
                                 GlobalMessageItem(
                                     message = msg,
-                                    isMe = msg.senderId == currentUser.uid,
+                                    isMe = msg.senderId == currentUser.id,
                                     onAuthorClick = { userId -> onNavigateToProfile(userId) }
                                 )
                             }
@@ -270,8 +270,8 @@ fun MessagesMainScreen(
                                         onClick = {
                                             val target = convToDelete
                                             convToDelete = null
-                                            if (target != null && currentUser.uid.isNotEmpty()) {
-                                                viewModel.deleteConversation(currentUser.uid, target.chatRoomId)
+                                            if (target != null && currentUser.id.isNotEmpty()) {
+                                                viewModel.deleteConversation(currentUser.id, target.chatRoomId)
                                             }
                                         }
                                     ) {

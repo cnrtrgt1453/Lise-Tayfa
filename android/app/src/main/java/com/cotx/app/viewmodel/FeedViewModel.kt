@@ -3,9 +3,9 @@ package com.cotx.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cotx.app.data.model.Question
-import com.cotx.app.data.model.User
 import com.cotx.app.data.repository.AuthRepository
 import com.cotx.app.data.repository.QuestionRepository
+import com.cotx.app.domain.model.UserSummary
 import com.cotx.app.util.ExamSubjectHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -121,13 +121,13 @@ class FeedViewModel(
         }
     }
 
-    fun toggleLike(questionId: String, currentUser: User, isLiked: Boolean) {
+    fun toggleLike(questionId: String, currentUser: UserSummary, isLiked: Boolean) {
         viewModelScope.launch {
             questionRepository.toggleLikeQuestion(
                 questionId = questionId,
-                userId = currentUser.uid,
+                userId = currentUser.id,
                 userName = currentUser.displayName,
-                userPhotoUrl = currentUser.photoUrl,
+                userPhotoUrl = currentUser.avatarUrl ?: "",
                 isLiked = isLiked
             ).onSuccess {
                 loadFeed()
