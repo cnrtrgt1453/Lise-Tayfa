@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "901025625071-mv33ps0asgn1h3th35qpmispqv9oj37b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cotx.app",
+            "certificate_hash": "fc6bb5828f63cb8ebcb49bebab31f20dc69d830c"
+          }
+        },
+        {
           "client_id": "901025625071-p0eii72rngjrm25udesp4l0b3frpo94o.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

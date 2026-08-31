@@ -1,7 +1,7 @@
 # Graph Report - Lise-Tayfa  (2026-08-31)
 
 ## Corpus Check
-- 70 files · ~266,702 words
+- 70 files · ~266,745 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,41 +10,41 @@
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
-- Direct Messaging & Chat
-- Project Notes & Monetization Plan
-- Core UI Screens & Navigation
-- Authentication Flow
-- Notifications & Bottom Nav
-- Feed ViewModel & Screen
-- Question & Solution Repository
-- Auth Repository & User Model
-- Security & Play Store Publishing
+- Chat & Messaging
+- Product Plan & Privacy Docs
+- Question Posting & Navigation
+- Auth UI & Google Sign-In
+- Notifications
+- Feed & Exam Subjects
+- Questions & Solutions Repository
+- User & Auth Repository
+- Play Store Release & Security Checklist
 - Navigation Routes
 - Image Compression
-- Google Sign-In Troubleshooting
+- Google OAuth & SHA Setup
 - Emoji Picker
-- App Entry & Theming
-- Badge Helper
+- App Entry & Theme
+- Badge System
 - Exam Selection Dialog
 - Gradle Wrapper Script
-- App Icon & Brand Identity
-- Direct Message Model
+- Brand Identity & Icons
+- DirectMessage Route
 - App Icon (hdpi)
-- App Icon (xxhdpi round)
-- App Logo Icon
-- App Icon (hdpi round)
-- App Icon (mdpi)
-- App Icon (mdpi round)
-- App Icon (xhdpi)
-- App Icon (xhdpi round)
 - App Icon (xxhdpi)
-- App Icon (xxxhdpi)
-- App Icon (xxxhdpi round)
-- Android README Doc
+- App Logo Icon
+- Round Icon (hdpi)
+- Launcher Icon (mdpi)
+- Round Icon (mdpi)
+- Launcher Icon (xhdpi)
+- Round Icon (xhdpi)
+- App Icon (xxhdpi alt)
+- Launcher Icon (xxxhdpi)
+- Round Icon (xxxhdpi)
+- cotx App Package
 - Play Store Feature Graphic
-- Play Store Guide Doc
-- Technical Plan Doc
-- Security Tasklist Doc
+- cotx App Package
+- cotx App Package
+- cotx App Package
 
 ## God Nodes (most connected - your core abstractions)
 1. `AuthRepository` - 25 edges
@@ -80,39 +80,39 @@
 
 ## Communities (39 total, 18 thin omitted)
 
-### Community 0 - "Direct Messaging & Chat"
+### Community 0 - "Chat & Messaging"
 Cohesion: 0.08
 Nodes (17): ChatConversation, ChatMessage, ChatRepository, ListenerRegistration, Result, formatHeaderDate(), MessageBubble(), ConversationItem() (+9 more)
 
-### Community 1 - "Project Notes & Monetization Plan"
+### Community 1 - "Product Plan & Privacy Docs"
 Cohesion: 0.05
 Nodes (45): cotx Android README, Proje Klasör Yapısı, Projeyi Çalıştırma Adımları, Android Teknoloji Yığını (Kotlin 2.0 + Compose + MVVM), Veri Güvenliği (Data Safety) Formu, Hesap Silme Hakkı, Toplanan Veriler ve Kullanım Amaçları, İletişim (destek@cotxapp.com) (+37 more)
 
-### Community 2 - "Core UI Screens & Navigation"
+### Community 2 - "Question Posting & Navigation"
 Cohesion: 0.12
 Nodes (25): UserSummary, ReportDialog(), CotxNavGraph(), LoginScreen(), RegisterScreen(), DirectMessageScreen(), FeedScreen(), QuestionCard() (+17 more)
 
-### Community 3 - "Authentication Flow"
+### Community 3 - "Auth UI & Google Sign-In"
 Cohesion: 0.10
 Nodes (17): AcademicBackground(), Color, Modifier, PeriodicElementChip(), GoogleCredentialAuth, GoogleSignInCancelled, GoogleSignInNoAccount, Context (+9 more)
 
-### Community 4 - "Notifications & Bottom Nav"
+### Community 4 - "Notifications"
 Cohesion: 0.11
 Nodes (19): Notification, Result, NotificationRepository, CotxBottomBar(), CotxBottomTab, EXPLORE, HOME, MESSAGES (+11 more)
 
-### Community 5 - "Feed ViewModel & Screen"
+### Community 5 - "Feed & Exam Subjects"
 Cohesion: 0.11
 Nodes (16): getSubjectColor(), Color, ExamSubjectHelper, Error, FeedTab, EXPLORE, FOLLOWING, FeedUiState (+8 more)
 
-### Community 6 - "Question & Solution Repository"
+### Community 6 - "Questions & Solutions Repository"
 Cohesion: 0.15
 Nodes (7): Question, Solution, Context, Result, Uri, QuestionRepository, ProfanityFilter
 
-### Community 7 - "Auth Repository & User Model"
+### Community 7 - "User & Auth Repository"
 Cohesion: 0.17
 Nodes (5): User, AuthRepository, android, Result, Exception
 
-### Community 8 - "Security & Play Store Publishing"
+### Community 8 - "Play Store Release & Security Checklist"
 Cohesion: 0.12
 Nodes (20): Google Sign-In Developer Error 10 Çözüm Rehberi, Google Play Services Yayılma Bekleme Süresi (15-30 dk), cotx Google Play Store Yayınlama Rehberi, Firebase SHA-1 Parmak İzi Entegrasyonu, Keystore Yapılandırması (key.properties), Gizlilik Politikası Bağlantısı Zorunluluğu, İmzalı Release AAB Derleme Süreci, Yayına Gönderim (Closed Testing / Production) (+12 more)
 
@@ -124,7 +124,7 @@ Nodes (11): AddQuestion, DirectMessage, EditProfile, Feed, Login, Messages, Noti
 Cohesion: 0.32
 Nodes (6): ImageCompressor, Context, Uri, Bitmap, BitmapFactory, ByteArray
 
-### Community 11 - "Google Sign-In Troubleshooting"
+### Community 11 - "Google OAuth & SHA Setup"
 Cohesion: 0.22
 Nodes (9): cotx App (com.cotx.app), Developer Error 10 (StatusCode 10), Internal App Sharing Sertifikası, Google Cloud Manual Android OAuth Client Oluşturma, OAuth Consent Screen Testing Durumu, Post-Quantum Cryptography SHA-1 Fingerprint, Play Store App Signing SHA-256 Sertifikası, Firebase Destek E-postası (Support Email) Kontrolü (+1 more)
 
@@ -132,7 +132,7 @@ Nodes (9): cotx App (com.cotx.app), Developer Error 10 (StatusCode 10), Internal
 Cohesion: 0.29
 Nodes (7): EmojiCategory, EMOTIONS, POPULAR, STUDY, SYMBOLS, EmojiPickerPanel(), Modifier
 
-### Community 13 - "App Entry & Theming"
+### Community 13 - "App Entry & Theme"
 Cohesion: 0.43
 Nodes (4): MainActivity, CotxTheme(), Bundle, ComponentActivity
 
@@ -144,7 +144,7 @@ Nodes (3): ExamOptionCard(), ExamSelectionDialog(), Color
 Cohesion: 0.83
 Nodes (3): gradlew script, die(), warn()
 
-### Community 17 - "App Icon & Brand Identity"
+### Community 17 - "Brand Identity & Icons"
 Cohesion: 0.67
 Nodes (3): App Launcher Icon Foreground (CotxAcademy Logo), CotxAcademy Brand Identity, Education Subject Domains (Math, Reading, Geography/Language, Science)
 
@@ -166,13 +166,13 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
 - **What is the exact relationship between `Görsel Depolama Mimarisi (AWS S3/GCS/Cloudinary)` and `Firebase Entegrasyonu Kurulumu`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `Görsel Yüklemelerinde EXIF/GPS Veri Temizliği` connect `Project Notes & Monetization Plan` to `Security & Play Store Publishing`, `Image Compression`?**
+- **Why does `Görsel Yüklemelerinde EXIF/GPS Veri Temizliği` connect `Product Plan & Privacy Docs` to `Play Store Release & Security Checklist`, `Image Compression`?**
   _High betweenness centrality (0.238) - this node is a cross-community bridge._
-- **Why does `ImageCompressor` connect `Image Compression` to `Question & Solution Repository`?**
+- **Why does `ImageCompressor` connect `Image Compression` to `Questions & Solutions Repository`?**
   _High betweenness centrality (0.173) - this node is a cross-community bridge._
 - **What connects `DirectMessage`, `EXPLORE`, `HOME` to the rest of the system?**
   _87 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Direct Messaging & Chat` be split into smaller, more focused modules?**
+- **Should `Chat & Messaging` be split into smaller, more focused modules?**
   _Cohesion score 0.07922705314009662 - nodes in this community are weakly interconnected._
-- **Should `Project Notes & Monetization Plan` be split into smaller, more focused modules?**
+- **Should `Product Plan & Privacy Docs` be split into smaller, more focused modules?**
   _Cohesion score 0.052525252525252523 - nodes in this community are weakly interconnected._

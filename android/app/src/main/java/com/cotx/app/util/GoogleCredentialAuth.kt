@@ -60,8 +60,11 @@ object GoogleCredentialAuth {
         } catch (e: NoCredentialException) {
             throw GoogleSignInNoAccount()
         } catch (e: GetCredentialException) {
+            // DEBUG: orijinal exception'ı `cause` olarak koru ki ekrandaki hata
+            // pop-up'ı Google Play Services'in gerçek iç hata kodunu gösterebilsin.
             throw Exception(
-                "Google giriş hatası (${e.javaClass.simpleName}): ${e.errorMessage ?: "ayrıntı yok"}"
+                "Google giriş hatası (${e.javaClass.simpleName}): ${e.errorMessage ?: "ayrıntı yok"}",
+                e
             )
         }
 
@@ -72,7 +75,7 @@ object GoogleCredentialAuth {
             return try {
                 GoogleIdTokenCredential.createFrom(credential.data).idToken
             } catch (e: GoogleIdTokenParsingException) {
-                throw Exception("Google kimlik jetonu okunamadı: ${e.message}")
+                throw Exception("Google kimlik jetonu okunamadı: ${e.message}", e)
             }
         }
 

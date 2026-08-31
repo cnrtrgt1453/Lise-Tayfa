@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cotx.app.ui.components.AcademicBackground
 import com.cotx.app.ui.theme.PrimaryPurple
+import com.cotx.app.util.DebugErrorDialog
+import com.cotx.app.util.DebugErrorInfo
 import com.cotx.app.util.GoogleCredentialAuth
 import com.cotx.app.util.GoogleSignInCancelled
 import com.cotx.app.viewmodel.AuthUiState
@@ -32,6 +34,8 @@ fun LoginScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var errorDialogMessage by remember { mutableStateOf<String?>(null) }
+    // GEÇİCİ DEBUG: ham Google/Play Services hatası için ekran içi pop-up.
+    var debugErrorInfo by remember { mutableStateOf<DebugErrorInfo?>(null) }
 
     // --- Credential Manager tabanlı "Google ile Giriş" akışı ---
     fun launchGoogleSignIn() {
@@ -43,34 +47,43 @@ fun LoginScreen(
                 // Kullanıcı hesap seçmeden çıktı: sessizce başlangıç durumuna dön.
                 viewModel.resetState()
             } catch (e: Exception) {
-                val detail = buildString {
-                    appendLine("⚠️ Google ile giriş yapılamadı")
-                    appendLine()
-                    appendLine("Mesaj: ${e.localizedMessage ?: e.message ?: "Bilinmeyen hata"}")
-                    appendLine("Paket Adı: ${context.packageName}")
-                    appendLine()
-                    appendLine("🛠️ Sık görülen nedenler:")
-                    appendLine("1. Play App Signing SHA-1 / SHA-256 parmak izleri Firebase Console'a eklenmemiş.")
-                    appendLine("2. Google Cloud OAuth izin ekranı hâlâ \"Testing\" modunda (Production'a alın).")
-                    appendLine("3. Firebase ➔ Genel Ayarlar ➔ Destek E-postası alanı boş.")
-                    append("4. google-services.json güncel değil (yenisini indirip değiştirin, yeni AAB derleyin).")
-                }
-                errorDialogMessage = detail
-                viewModel.setError(detail)
+                // GEÇİCİ DEBUG: exception'ın tam sınıf adı + mesaj + stack trace'i
+                // doğrudan ekranda göster (Logcat gerekmesin).
+                viewModel.setError(
+                    e.message ?: e.localizedMessage ?: "Google ile giriş yapılamadı",
+                    DebugErrorInfo.from(e)
+                )
             }
         }
     }
 
     LaunchedEffect(uiState) {
-        if (uiState is AuthUiState.Success) {
-            onLoginSuccess()
-        } else if (uiState is AuthUiState.Error) {
-            errorDialogMessage = (uiState as AuthUiState.Error).message
+        when (val state = uiState) {
+            is AuthUiState.Success -> onLoginSuccess()
+            is AuthUiState.Error -> {
+                if (state.debugInfo != null) {
+                    debugErrorInfo = state.debugInfo
+                } else {
+                    errorDialogMessage = state.message
+                }
+            }
+            else -> {}
         }
     }
 
+    // --- GEÇİCİ DEBUG: Ham Hata Pop-Up'ı (yayından önce kaldırın) ---
+    debugErrorInfo?.let { info ->
+        DebugErrorDialog(
+            info = info,
+            onDismiss = {
+                debugErrorInfo = null
+                viewModel.resetState()
+            }
+        )
+    }
+
     // --- Detaylı Hata Pop-Up Dialog ---
-    if (errorDialogMessage != null) {
+    if (errorDialogMessage != null && debugErrorInfo == null) {
         AlertDialog(
             onDismissRequest = { errorDialogMessage = null },
             title = {

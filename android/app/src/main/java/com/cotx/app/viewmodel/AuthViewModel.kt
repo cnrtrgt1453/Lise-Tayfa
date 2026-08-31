@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cotx.app.data.model.User
 import com.cotx.app.data.repository.AuthRepository
+import com.cotx.app.util.DebugErrorInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +15,11 @@ sealed interface AuthUiState {
     object Idle : AuthUiState
     object Loading : AuthUiState
     data class Success(val user: User) : AuthUiState
-    data class Error(val message: String) : AuthUiState
+    /**
+     * @param debugInfo GEÇİCİ: dolu olduğunda ekranda ham hata pop-up'ı (tam exception
+     *   sınıf adı + mesaj + stack trace kopyalama) gösterilir. Yayından önce kaldırın.
+     */
+    data class Error(val message: String, val debugInfo: DebugErrorInfo? = null) : AuthUiState
 }
 
 class AuthViewModel(
@@ -105,7 +110,7 @@ class AuthViewModel(
                         append(stackLines)
                     }
 
-                    _uiState.value = AuthUiState.Error(detailedErrorLog)
+                    _uiState.value = AuthUiState.Error(detailedErrorLog, DebugErrorInfo.from(error))
                 }
         }
     }
@@ -208,8 +213,8 @@ class AuthViewModel(
         }
     }
 
-    fun setError(message: String) {
-        _uiState.value = AuthUiState.Error(message)
+    fun setError(message: String, debugInfo: DebugErrorInfo? = null) {
+        _uiState.value = AuthUiState.Error(message, debugInfo)
     }
 
     fun resetState() {
