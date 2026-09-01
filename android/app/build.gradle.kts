@@ -31,8 +31,8 @@ android {
         applicationId = "com.cotx.app"
         minSdk = 24
         targetSdk = 36
-        versionCode = 19
-        versionName = "1.0.17"
+        versionCode = 22
+        versionName = "1.0.20"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

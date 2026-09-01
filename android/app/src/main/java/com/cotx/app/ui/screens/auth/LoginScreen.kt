@@ -47,11 +47,11 @@ fun LoginScreen(
                 // Kullanıcı hesap seçmeden çıktı: sessizce başlangıç durumuna dön.
                 viewModel.resetState()
             } catch (e: Exception) {
-                // GEÇİCİ DEBUG: exception'ın tam sınıf adı + mesaj + stack trace'i
-                // doğrudan ekranda göster (Logcat gerekmesin).
+                // GEÇİCİ DEBUG: exception'ın tam sınıf adı + mesaj + stack trace'i +
+                // bu APK'nın imza SHA-1'i doğrudan ekranda göster (Logcat gerekmesin).
                 viewModel.setError(
                     e.message ?: e.localizedMessage ?: "Google ile giriş yapılamadı",
-                    DebugErrorInfo.from(e)
+                    DebugErrorInfo.from(e, context)
                 )
             }
         }

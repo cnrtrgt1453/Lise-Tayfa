@@ -35,24 +35,84 @@ import androidx.compose.ui.unit.sp
 data class DebugErrorInfo(
     val className: String,
     val message: String,
+    /** Tüm `cause` zinciri (her seviye: sınıf adı + mesaj). */
     val cause: String,
-    val stackTrace: String
+    /** GMS ApiException vb. içinden reflection ile çekilen sayısal kodlar. */
+    val statusCodes: String,
+    val stackTrace: String,
+    /** Bu cihazdaki APK'yı imzalayan sertifikanın SHA-1 / SHA-256 parmak izi. */
+    val signatureText: String = "(context verilmedi — hesaplanamadı)"
 ) {
     companion object {
-        fun from(error: Throwable): DebugErrorInfo = DebugErrorInfo(
-            className = error.javaClass.name,
-            message = error.message ?: error.localizedMessage ?: "(mesaj yok)",
-            cause = error.cause?.let { "${it.javaClass.name}: ${it.message ?: "(mesaj yok)"}" }
-                ?: "(cause yok)",
-            stackTrace = Log.getStackTraceString(error)
+        // R8, string literal'leri ve runtime mesajlarını gizlemez; mesaj ve durum
+        // kodları minify açıkken bile okunabilir kalır (sınıf ADLARI gizlenir).
+        private val CODE_ACCESSORS = listOf(
+            "getStatusCode", "getErrorCode", "getCode", "getType"
         )
+        private val CODE_FIELDS = listOf("statusCode", "errorCode", "mStatusCode")
+
+        fun from(error: Throwable, context: Context? = null): DebugErrorInfo {
+            val chain = generateSequence<Throwable>(error) { it.cause }.take(12).toList()
+
+            val causeText = if (chain.size <= 1) {
+                "(cause yok)"
+            } else {
+                chain.drop(1).mapIndexed { i, t ->
+                    "  #${i + 1} ${t.javaClass.name}: ${t.message ?: "(mesaj yok)"}"
+                }.joinToString("\n")
+            }
+
+            val codes = chain
+                .mapNotNull { t -> probeCode(t)?.let { "${t.javaClass.simpleName} -> $it" } }
+                .distinct()
+
+            val signatureText = if (context != null) {
+                runCatching { SignatureInfo.current(context).asReadableText() }
+                    .getOrElse { "(imza okunamadı: ${it.message})" }
+            } else {
+                "(context verilmedi — hesaplanamadı)"
+            }
+
+            return DebugErrorInfo(
+                className = error.javaClass.name,
+                message = error.message ?: error.localizedMessage ?: "(mesaj yok)",
+                cause = causeText,
+                statusCodes = if (codes.isEmpty()) "(bulunamadı)" else codes.joinToString("\n"),
+                stackTrace = Log.getStackTraceString(error),
+                signatureText = signatureText
+            )
+        }
+
+        /** Bir throwable üzerinde bilinen kod alanı/metodlarını reflection ile dener. */
+        private fun probeCode(t: Throwable): String? {
+            for (name in CODE_ACCESSORS) {
+                runCatching {
+                    val m = t.javaClass.getMethod(name)
+                    m.isAccessible = true
+                    m.invoke(t)?.let { return "$name()=$it" }
+                }
+            }
+            for (name in CODE_FIELDS) {
+                runCatching {
+                    val f = t.javaClass.getDeclaredField(name)
+                    f.isAccessible = true
+                    f.get(t)?.let { return "$name=$it" }
+                }
+            }
+            return null
+        }
     }
 
-    /** Panoya kopyalanacak tam metin. */
+    /** Panoya kopyalanacak tam metin. En yararlı alanlar en üstte. */
     fun asClipboardText(): String = buildString {
         appendLine("Exception Class : $className")
         appendLine("Message         : $message")
-        appendLine("Cause           : $cause")
+        appendLine("Status Code(s)  :")
+        appendLine(statusCodes)
+        appendLine("Running APK Signature (Firebase'e eklenecek parmak izi):")
+        appendLine(signatureText)
+        appendLine("Cause Chain     :")
+        appendLine(cause)
         appendLine()
         appendLine("---- FULL STACK TRACE ----")
         append(stackTrace)
@@ -85,7 +145,11 @@ fun DebugErrorDialog(
                 Spacer(Modifier.height(10.dp))
                 DebugField("Message", info.message)
                 Spacer(Modifier.height(10.dp))
-                DebugField("Cause", info.cause)
+                DebugField("Status Code(s)", info.statusCodes)
+                Spacer(Modifier.height(10.dp))
+                DebugField("Bu APK'nın İmzası (SHA-1 / SHA-256)", info.signatureText)
+                Spacer(Modifier.height(10.dp))
+                DebugField("Cause Chain", info.cause)
                 Spacer(Modifier.height(10.dp))
                 DebugField("Stack Trace", info.stackTrace)
             }

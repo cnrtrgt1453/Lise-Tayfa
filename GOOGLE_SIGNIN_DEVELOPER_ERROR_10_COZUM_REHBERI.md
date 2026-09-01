@@ -4,83 +4,113 @@ Bu doküman, **cotx** (`com.cotx.app`) uygulamasının Android Studio emülatör
 
 ---
 
-## 📌 StatusCode 10 (DEVELOPER_ERROR) Nedir?
+## 🧭 TL;DR — Kök Neden
 
-Google Play Services dokümantasyonuna göre **Developer Error 10**, cihazdaki Google Play Services'ın şu 3 bilgiyi Google OAuth sunucularına gönderip eşleşen bir yetki bulamaması sonucu oluşur:
+Play Store'a `.aab` yüklediğinizde uygulama **Play App Signing**'e dahil olur. Google, testçilere dağıtılan APK'yı **sizin upload (yükleme) anahtarınızla değil, kendi "uygulama imzalama anahtarı" (app signing key) ile yeniden imzalar.**
 
-1. **Paket Adı (Package Name):** `com.cotx.app`
-2. **Cihazda Çalışan APK'nın SHA-1 İmzası** (Play Store re-sign imzası)
+Google Sign-In (Credential Manager), Google OAuth sunucularına şu üçlüyü gönderir:
+
+1. **Paket adı:** `com.cotx.app`
+2. **Çalışan APK'yı imzalayan sertifikanın SHA-1'i** → İç/Kapalı testte bu **Play App Signing anahtarının SHA-1'idir**
 3. **Web Client ID:** `901025625071-jnrlh6u7fammldvpu21db6cbnok6s6ar.apps.googleusercontent.com`
 
----
+Firebase / Google Cloud OAuth istemcilerinde **bu SHA-1 kayıtlı değilse** → `StatusCode 10 (DEVELOPER_ERROR)`.
 
-## 🔍 Hatanın Çözümü İçin 3 Kritik Kontrol Noktası
+Emülatörde çalışmasının nedeni: emülatör **debug** APK'yı **debug keystore** ile imzalar ve o SHA-1 zaten `google-services.json` içinde kayıtlıdır. Ayrıca debug derlemesinde R8/minify kapalıdır.
 
----
-
-### 1️⃣ Firebase Console "Destek E-postası" (Support Email) Kontrolü *(EN SIK GÖZDEN KAÇAN NEDEN)*
-
-Google OAuth politikaları gereği, Canlı / Release sürümlerinden gelen kimlik doğrulama isteklerinde projede tanımlı bir iletişim e-postası bulunması zorunludur.
-
-* **Yapılacak İşlem:**
-  1. [Firebase Console](https://console.firebase.google.com/)'a giriş yapın ➔ **cotx-c167c** projesini seçin.
-  2. Proje Ayarları (Sol üstteki çark simgesi) ➔ **Genel (General)** sekmesine gelin.
-  3. En üstte yer alan **Destek e-postası (Support email)** alanını kontrol edin.
-  4. Eğer orada "Seçilmedi" veya boş görünüyorsa, e-posta adresinizi seçip **Kaydet** butonuna basın.
-
-> [!WARNING]
-> Destek e-postası boş bırakıldığında Google OAuth sunucuları canlı/release derlemelerinden gelen istekleri doğrudan `StatusCode: 10 (DEVELOPER_ERROR)` ile reddeder.
+> ⚠️ **`google-services.json` içindeki `certificate_hash` değerleri hatayı çözmez.** Bu dosya uygulamaya yalnızca `default_web_client_id` sağlar; SHA-1 doğrulaması Google'ın OAuth backend'inde, **projeye kayıtlı Android OAuth istemcileri listesine** göre yapılır. Yani asıl iş Firebase/GCP Console'da SHA eklemektir; sonra dosyayı yeniden indirmek sadece iyi bir pratiktir.
 
 ---
 
-### 2️⃣ Google Cloud Credentials Tarafında Manuel Android İstemcisi Oluşturma
+## ✅ Adım Adım Çözüm (sırayla yapın)
 
-Firebase Console'a eklenen bazı yeni SHA-1 parmak izleri (özellikle Play Store'un yeni **Post-quantum cryptography key** SHA-1'i) Google Cloud Console tarafına otomatik olarak yansımayabilir.
+### 1️⃣ Çalışan APK'nın gerçek imzasını öğrenin (artık uygulama söylüyor)
 
-* **Yapılacak İşlem:**
-  1. [Google Cloud Console Credentials](https://console.cloud.google.com/apis/credentials) sayfasına gidin (Üstte `cotx-c167c` projesi seçili olsun).
-  2. **OAuth 2.0 Client IDs** listesini kontrol edin.
-  3. Listede Play Console'dan aldığınız **Post-Quantum SHA-1** (`ADC723A7FA5D69F736413EBEF7A880F20692DC62`) değerine sahip bir Android İstemcisi var mı kontrol edin.
-  4. **Eğer görünmüyorsa manuel ekleyin:**
-     - En üstten **`+ CREATE CREDENTIALS`** ➔ **`OAuth client ID`** butonuna tıklayın.
-     - **Application type:** `Android` seçin.
-     - **Name:** `Play App Signing Post-Quantum` yazın.
-     - **Package name:** `com.cotx.app`
-     - **SHA-1 certificate fingerprint:** `ADC723A7FA5D69F736413EBEF7A880F20692DC62` yapıştırın.
-     - **CREATE** butonuna basarak kaydedin.
+Bu repoda `SignatureInfo` yardımcısı eklendi. İç/Kapalı test derlemesinde **Google ile Giriş** butonuna basıp hata alınca çıkan **🐞 DEBUG pop-up'ında** şu alan görünür:
+
+```
+Bu APK'nın İmzası (SHA-1 / SHA-256)
+Package : com.cotx.app
+SHA-1   : XX:XX:...
+SHA-256 : XX:XX:...
+```
+
+**"Kopyala"** ile panoya alın. Play tarafından imzalanan bir derlemede bu değer **doğrudan Play App Signing parmak izidir** — Firebase'e eklemeniz gereken tam değer budur.
+
+> Not: Release derlemesinde `proguard-rules.pro` tüm `android.util.Log` çağrılarını sildiği için `AuthViewModel` içindeki `Log.e(...)` satırları Logcat'e **hiçbir şey basmaz**. İç/Kapalı testte tek güvenilir teşhis kanalı bu ekran pop-up'ıdır.
+
+### 2️⃣ Play Console'dan tüm sertifika parmak izlerini toplayın
+
+**Play Console → Test ve yayınlama → Uygulama bütünlüğü (App integrity) → Play uygulama imzalama:**
+
+| Sertifika | Kopyalanacaklar |
+|---|---|
+| **Uygulama imzalama anahtarı sertifikası** (App signing key) | SHA-1 **ve** SHA-256 |
+| **Yükleme anahtarı sertifikası** (Upload key) | SHA-1 **ve** SHA-256 |
+
+Adım 1'deki SHA-1 ile buradaki "Uygulama imzalama anahtarı" SHA-1'i **aynı olmalı**. Farklıysa cihaza mağaza/İç Test dışı bir yoldan (yan yükleme, farklı kanal) kurmuşsunuz demektir.
+
+### 3️⃣ Bu parmak izlerini Firebase'e ekleyin
+
+**Firebase Console → `cotx-c167c` → Proje Ayarları → Uygulamalarınız → `com.cotx.app` → "Parmak izi ekle":**
+
+Şunların **hepsini** ayrı ayrı ekleyin:
+- App signing key **SHA-1**
+- App signing key **SHA-256**  ← yeni OAuth politikası bunu da şart koşuyor
+- Upload key **SHA-1**
+- Upload key **SHA-256**
+
+### 4️⃣ Destek e-postasını kontrol edin
+
+**Firebase Console → Proje Ayarları → Genel → Destek e-postası (Support email)** boş olmamalı. Boşsa bir adres seçip **Kaydet**. (Boş destek e-postası, release isteklerinde doğrudan `StatusCode 10` sebebidir.)
+
+### 5️⃣ Güncel `google-services.json` dosyasını indirin
+
+Firebase Console → Proje Ayarları → `com.cotx.app` → **google-services.json indir** → repodaki `android/app/google-services.json` ile değiştirin → commit'leyin.
+
+### 6️⃣ Google Cloud tarafında OAuth istemcisini doğrulayın
+
+**Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client IDs:**
+
+Her SHA-1 için `Android` tipinde, `com.cotx.app` paketli bir istemci olmalı. App signing key SHA-1'ine ait istemci **yoksa** manuel ekleyin:
+- **+ CREATE CREDENTIALS → OAuth client ID**
+- Application type: **Android**
+- Name: `Play App Signing`
+- Package name: `com.cotx.app`
+- SHA-1: (Adım 2'deki app signing SHA-1)
+- **CREATE**
+
+### 7️⃣ OAuth Consent Screen "Testing" durumu (Kapalı test için kritik)
+
+**Google Cloud Console → APIs & Services → OAuth consent screen:**
+
+- **Publishing status = Testing** ise: yalnızca "Test users" listesindeki Gmail'ler giriş yapabilir; diğer herkes `StatusCode 10` / erişim engeli alır.
+- Çözüm: ya tüm kapalı-test kullanıcılarının e-postalarını **Test users**'a ekleyin, ya da **PUBLISH APP** ile "In production"a geçin (yalnızca `email` + `profile` kapsamları için Google doğrulaması gerekmez).
+
+### 8️⃣ Yayılmayı bekleyin ve önbelleği temizleyin
+
+- SHA / e-posta değişiklikleri Google sunucularına **15–30 dakikada** yayılır.
+- Test cihazında: **Ayarlar → Uygulamalar → Google Play Hizmetleri → Depolama → Önbelleği temizle.**
+- Uygulamayı kapatıp yeniden açın ve tekrar deneyin.
 
 ---
 
-### 3️⃣ Dahili Uygulama Paylaşımı (Internal App Sharing) Sertifikası Kontrolü
+## 🔎 Kod tarafında yapılan iyileştirmeler (bu repo)
 
-Uygulamayı telefonunuza yüklerken mağaza sayfasından mı indirdiniz yoksa dahili indirme bağlantısı (Internal App Sharing linki) mı kullandınız?
+| Dosya | Değişiklik |
+|---|---|
+| `util/SignatureInfo.kt` *(yeni)* | Çalışan APK'nın imza SHA-1 / SHA-256'sını runtime'da hesaplar. |
+| `util/GoogleCredentialAuth.kt` | `NoCredentialException` alınca `GetSignInWithGoogleOption` (klasik buton akışı) ile otomatik ikinci deneme. Hata zincirinde `DEVELOPER_ERROR` / `code 10` görülürse, çalışan SHA-1'i gömülü içeren `GoogleSignInConfigError` fırlatır. |
+| `util/DebugErrorDialog.kt` | DEBUG pop-up'ına "Bu APK'nın İmzası (SHA-1 / SHA-256)" alanı eklendi; "Kopyala" bu bilgiyi de kopyalar. |
+| `ui/screens/auth/LoginScreen.kt` | `DebugErrorInfo.from(e, context)` — imza bilgisinin hesaplanabilmesi için context geçiliyor. |
 
-* **Eğer Internal App Sharing bağlantısı kullandıysanız:**
-  - Play Store bu bağlantı üzerinden indirilen APK'ları mağazadaki ana key ile değil, **Dahili Uygulama Paylaşımı Sertifikası** ile imzalar.
-  - **Yapılacak İşlem:** Play Console ➔ **Kurulum (Setup) > Dahili Uygulama Paylaşımı (Internal App Sharing)** ➔ **Sertifikalar** sekmesindeki SHA-1 parmak izini kopyalayıp Firebase Console'a ekleyin.
-
-### 4️⃣ Play Store App Signing SHA-256 Sertifikasını Ekleme
-Google Play Services yeni OAuth politikalarında release derlemeler için SHA-1'in yanı sıra SHA-256 sertifikasının da kaydedilmiş olmasını şart koşar.
-
-* **Yapılacak İşlem:**
-  1. Google Play Console ➔ **Kurulum (Setup) > Uygulama Bütünlüğü (App Integrity)** sekmesine gidin.
-  2. **Uygulama imzalama anahtarı sertifikası (App signing key certificate)** kısmındaki **SHA-256** değerini kopyalayın.
-  3. Firebase Console ➔ Proje Ayarları ➔ `com.cotx.app` uygulamasına SHA-256 parmak izini ekleyin.
+Bu değişiklikler **sunucu tarafı yapılandırmayı** yerine getirmez; sadece hangi SHA-1'i eklemeniz gerektiğini net gösterir ve giriş akışını biraz daha dayanıklı yapar. Asıl düzeltme yukarıdaki 2–7. adımlardır.
 
 ---
 
-### 5️⃣ Google Cloud OAuth Consent Screen "Testing" Durum Kontrolü
-Google Cloud Console'da OAuth Rıza Ekranı (OAuth Consent Screen) **"Testing"** modundaysa, test kullanıcılarının e-posta adresleri GCP üzerindeki Test Users listesinde değilse Google Sign-In `StatusCode 10` veya erişim engeli verir.
+## 🧪 Doğrulama
 
-* **Yapılacak İşlem:**
-  1. [Google Cloud Console OAuth Consent Screen](https://console.cloud.google.com/apis/credentials/consent) sayfasına gidin.
-  2. **Publishing status** alanını kontrol edin.
-  3. **`PUBLISH APP (UYGULAMAYI YAYINLA)`** butonuna basarak rıza ekranını "Yayında (In Production)" moduna geçirin.
-
----
-
-## ⏰ Güncelleme Sonrası Bekleme Süresi
-
-Firebase Console ve Google Cloud Credentials üzerinde yapılan SHA-1, SHA-256 ve Destek E-postası değişikliklerinin Google'ın tüm dünya üzerindeki Play Services sunucularına yayılması **15 ila 30 dakika** sürmektedir.
-
-Değişiklikleri tamamladıktan **20 dakika sonra** cihazdaki **Google Play Hizmetleri önbelleğini temizleyip** İç/Kapalı test uygulamanızı test edebilirsiniz.
+1. Yukarıdaki 2–7 adımları tamamlayın, 20 dk bekleyin, Play Hizmetleri önbelleğini temizleyin.
+2. İç Test sürümünü mağazadan (veya İç Test bağlantısından) yeniden indirin.
+3. "Google ile Giriş" → hesap seçin → uygulamaya giriş yapılmalı.
+4. Hâlâ hata alıyorsanız: DEBUG pop-up'taki **SHA-1**'i, Firebase'e eklediğiniz app-signing SHA-1 ile **karakter karakter** karşılaştırın. Eşleşmiyorsa cihaza yanlış kanaldan kurulmuş demektir.

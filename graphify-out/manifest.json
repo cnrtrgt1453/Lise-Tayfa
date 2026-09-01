@@ -1,15 +1,15 @@
 {
   "android/app/build.gradle.kts": {
-    "mtime": 1788191380.876196,
-    "seen": 1788209680.8850038,
-    "ast_hash": "a35137a6e2af3cb1da175084058d5d12",
-    "semantic_hash": "a35137a6e2af3cb1da175084058d5d12"
+    "mtime": 1788212961.265998,
+    "seen": 1788251055.7019112,
+    "ast_hash": "ee1e3a75f323b0b32d9631932c2a31ce",
+    "semantic_hash": "ee1e3a75f323b0b32d9631932c2a31ce"
   },
   "android/app/google-services.json": {
-    "mtime": 1788189825.8699243,
-    "seen": 1788209680.8850038,
-    "ast_hash": "73cf985cfd793035280e8ed79adf315f",
-    "semantic_hash": "73cf985cfd793035280e8ed79adf315f"
+    "mtime": 1788210187.9244037,
+    "seen": 1788251055.7019112,
+    "ast_hash": "6b8119f7234d3cad4c7baad9df33d37b",
+    "semantic_hash": "6b8119f7234d3cad4c7baad9df33d37b"
   },
   "android/app/src/main/java/com/cotx/app/MainActivity.kt": {
     "mtime": 1787230610.1187253,
@@ -126,16 +126,16 @@
     "semantic_hash": "21f4d16c83e3d3f10136ac344763e19f"
   },
   "android/app/src/main/java/com/cotx/app/ui/screens/auth/LoginScreen.kt": {
-    "mtime": 1788000678.3758905,
-    "seen": 1788157803.5718527,
-    "ast_hash": "abddffc8d1fcae808f0b08991b710efb",
-    "semantic_hash": "abddffc8d1fcae808f0b08991b710efb"
+    "mtime": 1788210187.926404,
+    "seen": 1788251055.7019112,
+    "ast_hash": "8f62d330536d7c7f0b9cec1f854089fb",
+    "semantic_hash": "8f62d330536d7c7f0b9cec1f854089fb"
   },
   "android/app/src/main/java/com/cotx/app/ui/screens/auth/RegisterScreen.kt": {
-    "mtime": 1788000710.4553976,
-    "seen": 1788157803.5718527,
-    "ast_hash": "ce63120a618ef9eb21751a84b8a503b8",
-    "semantic_hash": "ce63120a618ef9eb21751a84b8a503b8"
+    "mtime": 1788210187.927404,
+    "seen": 1788251055.7019112,
+    "ast_hash": "b4a3934bcd525edc15993ff662ccc45d",
+    "semantic_hash": "b4a3934bcd525edc15993ff662ccc45d"
   },
   "android/app/src/main/java/com/cotx/app/ui/screens/chat/DirectMessageScreen.kt": {
     "mtime": 1788163636.7199368,
@@ -216,10 +216,10 @@
     "semantic_hash": "19857587825a4d08a69503b332588597"
   },
   "android/app/src/main/java/com/cotx/app/util/GoogleCredentialAuth.kt": {
-    "mtime": 1788000630.1430097,
-    "seen": 1788157803.5718527,
-    "ast_hash": "77ca604222f4d5a3fb4242985f82213e",
-    "semantic_hash": "77ca604222f4d5a3fb4242985f82213e"
+    "mtime": 1788212040.921904,
+    "seen": 1788251055.7019112,
+    "ast_hash": "00c18f09819cb03461fb0a7623d55845",
+    "semantic_hash": "00c18f09819cb03461fb0a7623d55845"
   },
   "android/app/src/main/java/com/cotx/app/util/ImageCompressor.kt": {
     "mtime": 1787561642.311559,
@@ -246,10 +246,10 @@
     "semantic_hash": "5c0b4ee35ddd935591344a26c6d123c9"
   },
   "android/app/src/main/java/com/cotx/app/viewmodel/AuthViewModel.kt": {
-    "mtime": 1788014841.1587949,
-    "seen": 1788157803.5728543,
-    "ast_hash": "29662d3fd88e2b7c5fd0858ab3673413",
-    "semantic_hash": "29662d3fd88e2b7c5fd0858ab3673413"
+    "mtime": 1788210187.930406,
+    "seen": 1788251055.7019112,
+    "ast_hash": "e4746a34a44882ebceae401cae504649",
+    "semantic_hash": "e4746a34a44882ebceae401cae504649"
   },
   "android/app/src/main/java/com/cotx/app/viewmodel/ChatViewModel.kt": {
     "mtime": 1788160521.3702903,
@@ -408,15 +408,21 @@
     "semantic_hash": "c3747806fa73c8c23a7a6ea23676f937"
   },
   ".claude/settings.local.json": {
-    "mtime": 1788209661.3379903,
-    "seen": 1788209680.8850038,
-    "ast_hash": "8e207a8a22d045effb6b67b58472264b",
-    "semantic_hash": "8e207a8a22d045effb6b67b58472264b"
+    "mtime": 1788212418.1045542,
+    "seen": 1788251055.7019112,
+    "ast_hash": "a93a0d8f843fedb1d1d4efbac840ca8d",
+    "semantic_hash": "a93a0d8f843fedb1d1d4efbac840ca8d"
   },
   "android/app/src/main/java/com/cotx/app/domain/model/UserSummary.kt": {
     "mtime": 1788160521.360282,
     "seen": 1788162235.2450683,
     "ast_hash": "b21678e9d755e051fc0828d3881e86ee",
     "semantic_hash": "b21678e9d755e051fc0828d3881e86ee"
+  },
+  "android/app/src/main/java/com/cotx/app/util/DebugErrorDialog.kt": {
+    "mtime": 1788212395.7142084,
+    "seen": 1788251055.7019112,
+    "ast_hash": "f86b375b3ab11999e934638a8890d792",
+    "semantic_hash": "f86b375b3ab11999e934638a8890d792"
   }
 }
