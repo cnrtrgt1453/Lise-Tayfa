@@ -14,7 +14,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 
 /** Kullanıcı, Google hesap seçim ekranını seçim yapmadan kapattığında fırlatılır. */
-class GoogleSignInCancelled : Exception("İşlem iptal edildi. Google hesabı seçilmedi.")
+class GoogleSignInCancelled(cause: Throwable? = null) : Exception("İşlem iptal edildi veya Google Play Hizmetleri pencereyi kapattı.", cause)
 
 /** Cihazda tanımlı bir Google hesabı bulunamadığında veya OAuth doğrulama başarısız olduğunda fırlatılır. */
 class GoogleSignInNoAccount(cause: Throwable? = null) : Exception(
@@ -90,13 +90,13 @@ object GoogleCredentialAuth {
         val response = try {
             credentialManager.getCredential(activityContext, bottomSheetRequest)
         } catch (e: GetCredentialCancellationException) {
-            throw GoogleSignInCancelled()
+            throw GoogleSignInCancelled(e)
         } catch (e: NoCredentialException) {
             // Bottom-sheet için uygun hesap yok — klasik buton akışıyla yeniden dene.
             try {
                 credentialManager.getCredential(activityContext, buttonFlowRequest)
             } catch (e2: GetCredentialCancellationException) {
-                throw GoogleSignInCancelled()
+                throw GoogleSignInCancelled(e2)
             } catch (e2: NoCredentialException) {
                 throw GoogleSignInNoAccount(e2)
             } catch (e2: GetCredentialException) {

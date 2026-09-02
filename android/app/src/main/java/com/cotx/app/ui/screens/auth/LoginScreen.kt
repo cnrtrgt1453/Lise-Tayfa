@@ -42,13 +42,10 @@ fun LoginScreen(
         scope.launch {
             try {
                 val idToken = GoogleCredentialAuth.requestGoogleIdToken(context)
-                viewModel.loginWithGoogle(idToken)
+                viewModel.loginWithGoogle(idToken, context)
             } catch (e: GoogleSignInCancelled) {
-                // Kullanıcı hesap seçmeden çıktı: sessizce başlangıç durumuna dön.
-                viewModel.resetState()
+                // Kullanıcı hesap seçim ekranını kapattığında/iptal ettiğinde hata pop-up'ı çıkartma
             } catch (e: Exception) {
-                // GEÇİCİ DEBUG: exception'ın tam sınıf adı + mesaj + stack trace'i +
-                // bu APK'nın imza SHA-1'i doğrudan ekranda göster (Logcat gerekmesin).
                 viewModel.setError(
                     e.message ?: e.localizedMessage ?: "Google ile giriş yapılamadı",
                     DebugErrorInfo.from(e, context)

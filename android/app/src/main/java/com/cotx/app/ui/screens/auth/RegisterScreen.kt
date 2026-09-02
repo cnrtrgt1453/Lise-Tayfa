@@ -42,15 +42,13 @@ fun RegisterScreen(
         scope.launch {
             try {
                 val idToken = GoogleCredentialAuth.requestGoogleIdToken(context)
-                viewModel.loginWithGoogle(idToken)
+                viewModel.loginWithGoogle(idToken, context)
             } catch (e: GoogleSignInCancelled) {
-                viewModel.resetState()
+                // Kullanıcı hesap seçim ekranını kapattığında/iptal ettiğinde hata pop-up'ı çıkartma
             } catch (e: Exception) {
-                // GEÇİCİ DEBUG: exception'ın tam sınıf adı + mesaj + stack trace'i
-                // doğrudan ekranda göster (Logcat gerekmesin).
                 viewModel.setError(
                     e.message ?: e.localizedMessage ?: "Google ile kaydolunamadı",
-                    DebugErrorInfo.from(e)
+                    DebugErrorInfo.from(e, context)
                 )
             }
         }

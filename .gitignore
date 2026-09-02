@@ -37,7 +37,13 @@ key.properties
 *.iws
 *.ipr
 .vscode/
+.claude/
+.gemini/
 
-# OS generated files
+# Generated output & cache directories
+graphify-out/
+
+# Logs & OS generated files
+*.log
 .DS_Store
 Thumbs.db
