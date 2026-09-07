@@ -23,6 +23,7 @@ data class User(
     val isPro: Boolean = false,
     val solvedCount: Int = 0,
     val askedCount: Int = 0,
+    val fcmToken: String = "",
     @ServerTimestamp
     val createdAt: Date? = null
 )

@@ -39,6 +39,7 @@ class AuthRepository(
         )
 
         firestore.collection("users").document(uid).set(user).await()
+        syncFcmToken(uid)
         user
     }
 
@@ -46,7 +47,9 @@ class AuthRepository(
         val authResult = auth.signInWithEmailAndPassword(email, pass).await()
         val uid = authResult.user?.uid ?: throw Exception("User UID is null")
         val doc = firestore.collection("users").document(uid).get().await()
-        doc.toObject(User::class.java) ?: throw Exception("User data not found")
+        val user = doc.toObject(User::class.java) ?: throw Exception("User data not found")
+        syncFcmToken(uid)
+        user
     }
 
     suspend fun loginWithGoogle(idToken: String): Result<User> = runCatching {
@@ -56,7 +59,7 @@ class AuthRepository(
         val uid = firebaseUser.uid
 
         val userDoc = firestore.collection("users").document(uid).get().await()
-        if (userDoc.exists()) {
+        val user = if (userDoc.exists()) {
             userDoc.toObject(User::class.java) ?: throw Exception("Kullanıcı profili alınamadı.")
         } else {
             val newUser = User(
@@ -72,6 +75,17 @@ class AuthRepository(
             )
             firestore.collection("users").document(uid).set(newUser).await()
             newUser
+        }
+        syncFcmToken(uid)
+        user
+    }
+
+    private suspend fun syncFcmToken(uid: String) {
+        runCatching {
+            val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
+            if (!token.isNullOrEmpty()) {
+                firestore.collection("users").document(uid).update("fcmToken", token).await()
+            }
         }
     }
 

@@ -174,8 +174,59 @@ fun QuestionDetailScreen(
                 CircularProgressIndicator(color = PrimaryPurple)
             }
         } else if (question == null) {
-            LaunchedEffect(Unit) {
-                Toast.makeText(context, "Bu soru silinmiştir. Keşfet sayfasına yönlendiriliyorsunuz.", Toast.LENGTH_LONG).show()
+            var showDeletedPopup by remember { mutableStateOf(true) }
+
+            if (showDeletedPopup) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showDeletedPopup = false
+                        onNavigateBack()
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    },
+                    title = {
+                        Text(
+                            text = "Soru Bulunamadı",
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "Bu soru sistemden silinmiştir veya süresi dolmuştur.",
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showDeletedPopup = false
+                                onNavigateBack()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Tamam", fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                showDeletedPopup = false
+                                onNavigateToExplore()
+                            }
+                        ) {
+                            Text("Keşfet'e Git 🚀")
+                        }
+                    }
+                )
             }
 
             Box(
@@ -197,13 +248,13 @@ fun QuestionDetailScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Bu soru silinmiş veya süresi dolmuştur ⚠️",
+                        text = "Bu soru silinmiştir ⚠️",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Aradığınız soru artık mevcut değil. Keşfet sayfasındaki diğer soruları inceleyebilirsiniz.",
+                        text = "Bu soru sistemden silinmiştir veya süresi dolmuştur. Keşfet sayfasındaki diğer soruları inceleyebilirsiniz.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center

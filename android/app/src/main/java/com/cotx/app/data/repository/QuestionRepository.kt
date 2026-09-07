@@ -110,6 +110,7 @@ class QuestionRepository(
                 examType = examType,
                 subject = subject,
                 topic = topic,
+                title = topic,
                 description = description,
                 mode = mode,
                 createdAt = now,
@@ -307,11 +308,13 @@ class QuestionRepository(
         firestore.collection("questions").document(questionId)
             .update("commentCount", FieldValue.increment(1)).await()
 
-        // Trigger notification to question author
+        // Trigger notifications to question author and prior commenters
         runCatching {
             val qSnapshot = firestore.collection("questions").document(questionId).get().await()
             val question = qSnapshot.toObject(Question::class.java)
-            if (question != null && question.authorId != authorId) {
+
+            // 1. Notify question author if commenter is not the question author
+            if (question != null && question.authorId.isNotEmpty() && question.authorId != authorId) {
                 notificationRepository.sendNotification(
                     userId = question.authorId,
                     senderId = authorId,
@@ -320,6 +323,28 @@ class QuestionRepository(
                     questionId = questionId,
                     type = "COMMENT",
                     message = "$authorName soruna yeni bir çözüm ekledi 💬"
+                )
+            }
+
+            // 2. Fetch previous commenters for this question and notify them
+            val solutionsSnapshot = firestore.collection("questions").document(questionId)
+                .collection("solutions")
+                .get().await()
+
+            val previousCommenterIds = solutionsSnapshot.documents
+                .mapNotNull { it.getString("authorId") }
+                .filter { it.isNotEmpty() && it != authorId && it != question?.authorId }
+                .distinct()
+
+            for (commenterId in previousCommenterIds) {
+                notificationRepository.sendNotification(
+                    userId = commenterId,
+                    senderId = authorId,
+                    senderName = authorName,
+                    senderPhotoUrl = authorPhotoUrl,
+                    questionId = questionId,
+                    type = "COMMENT",
+                    message = "$authorName yorum yaptığın soruya yeni bir yorum ekledi 💬"
                 )
             }
         }

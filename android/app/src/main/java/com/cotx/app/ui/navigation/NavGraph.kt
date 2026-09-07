@@ -31,6 +31,7 @@ import com.cotx.app.viewmodel.NotificationViewModel
 @Composable
 fun CotxNavGraph(
     navController: NavHostController,
+    initialQuestionId: String? = null,
     authViewModel: AuthViewModel = viewModel(),
     feedViewModel: FeedViewModel = viewModel(),
     addQuestionViewModel: AddQuestionViewModel = viewModel(),
@@ -40,11 +41,19 @@ fun CotxNavGraph(
     val currentUser by authViewModel.currentUser.collectAsState()
     val unreadNotificationCount by notificationViewModel.unreadCount.collectAsState()
     val unreadMessageCount by chatViewModel.unreadMessageCount.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     androidx.compose.runtime.LaunchedEffect(currentUser?.uid) {
         val uid = currentUser?.uid ?: ""
         if (uid.isNotEmpty()) {
             chatViewModel.initListeners(uid)
+            notificationViewModel.initRealtimeListener(uid, context)
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(currentUser, initialQuestionId) {
+        if (currentUser != null && !initialQuestionId.isNullOrEmpty()) {
+            navController.navigate(Screen.QuestionDetail.createRoute(initialQuestionId))
         }
     }
 

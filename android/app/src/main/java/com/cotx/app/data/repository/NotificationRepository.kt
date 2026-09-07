@@ -92,5 +92,34 @@ class NotificationRepository(
         }
         batch.commit().await()
     }
+
+    /**
+     * Real-time listener for user notifications
+     */
+    fun listenUserNotifications(
+        userId: String,
+        onUpdate: (List<Notification>) -> Unit
+    ): com.google.firebase.firestore.ListenerRegistration? {
+        if (userId.isEmpty()) return null
+        return firestore.collection("notifications")
+            .whereEqualTo("userId", userId)
+            .limit(50)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) return@addSnapshotListener
+                val notifications = snapshot.toObjects(Notification::class.java)
+                    .sortedByDescending { it.createdAt }
+                onUpdate(notifications)
+            }
+    }
+
+    /**
+     * Update FCM device token for push notifications
+     */
+    suspend fun updateFcmToken(userId: String, token: String): Result<Unit> = runCatching {
+        if (userId.isEmpty() || token.isEmpty()) return@runCatching
+        firestore.collection("users").document(userId)
+            .update("fcmToken", token)
+            .await()
+    }
 }
 

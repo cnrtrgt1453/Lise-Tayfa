@@ -12,6 +12,7 @@ data class Question(
     val examType: String = "TYT/AYT", // "TYT/AYT" veya "LGS"
     val subject: String = "Matematik", // Matematik, Fizik, Kimya, Biyoloji, Türkçe, Tarih vb.
     val topic: String = "",
+    val title: String = "",
     val description: String = "",
     val mode: String = "Yardım İstiyorum", // "Yardım İstiyorum" veya "Taktik / Soru Tipi"
     val isSolved: Boolean = false,
@@ -22,4 +23,7 @@ data class Question(
     @ServerTimestamp
     val createdAt: Date? = null,
     val expiresAt: Date? = null // 3 gün sonra süresi dolma tarihi
-)
+) {
+    val displayTitle: String
+        get() = title.ifEmpty { topic }
+}

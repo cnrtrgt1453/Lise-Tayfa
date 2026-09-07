@@ -91,6 +91,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-messaging-ktx")
 
     // Credential Manager - "Sign in with Google" (modern API, GoogleSignIn yerine)
     implementation("androidx.credentials:credentials:1.3.0")

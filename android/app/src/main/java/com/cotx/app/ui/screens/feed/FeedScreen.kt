@@ -598,13 +598,32 @@ fun QuestionCard(
                 }
             }
 
-            if (question.description.isNotEmpty()) {
+            val displayTitle = question.displayTitle
+            if (displayTitle.isNotEmpty() || question.description.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = question.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 3
-                )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    if (displayTitle.isNotEmpty()) {
+                        Text(
+                            text = displayTitle,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    if (question.description.isNotEmpty()) {
+                        if (displayTitle.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                        Text(
+                            text = question.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (displayTitle.isNotEmpty()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                            maxLines = 4
+                        )
+                    }
+                }
             }
 
             // Question Image

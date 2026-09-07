@@ -142,7 +142,8 @@ fun AddQuestionScreen(
             OutlinedTextField(
                 value = topic,
                 onValueChange = { if (it.length <= 50) topic = it },
-                label = { Text("Konu (Örn: Türev, Üslü Sayılar)") },
+                label = { Text("Soru Başlığı / Konu (Örn: Türev, Üslü Sayılar)") },
+                placeholder = { Text("Sorunuz için bir başlık girin...") },
                 singleLine = true,
                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                     capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences,
