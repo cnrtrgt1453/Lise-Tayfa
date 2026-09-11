@@ -40,6 +40,9 @@ class NotificationRepository(
         )
 
         firestore.collection("notifications").document(id).set(notification).await()
+        Unit
+    }.onFailure { e ->
+        android.util.Log.e("NotificationRepository", "sendNotification failed to recipient $userId: ${e.message}", e)
     }
 
     /**
@@ -68,6 +71,7 @@ class NotificationRepository(
                     "read" to true
                 )
             ).await()
+        Unit
     }
 
     /**
@@ -91,6 +95,7 @@ class NotificationRepository(
             batch.update(doc.reference, mapOf("isRead" to true, "read" to true))
         }
         batch.commit().await()
+        Unit
     }
 
     /**
@@ -105,7 +110,11 @@ class NotificationRepository(
             .whereEqualTo("userId", userId)
             .limit(50)
             .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) return@addSnapshotListener
+                if (error != null) {
+                    android.util.Log.e("NotificationRepository", "listenUserNotifications error: ${error.message}", error)
+                    return@addSnapshotListener
+                }
+                if (snapshot == null) return@addSnapshotListener
                 val notifications = snapshot.toObjects(Notification::class.java)
                     .sortedByDescending { it.createdAt }
                 onUpdate(notifications)
@@ -120,6 +129,7 @@ class NotificationRepository(
         firestore.collection("users").document(userId)
             .update("fcmToken", token)
             .await()
+        Unit
     }
 }
 

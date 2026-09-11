@@ -655,7 +655,7 @@ fun QuestionCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Footer: Likes & Comments count
+            // Footer: Likes, Date & Comments count
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -677,6 +677,16 @@ fun QuestionCard(
                     )
                 }
 
+                question.createdAt?.let { date ->
+                    val dateStr = formatQuestionDate(date)
+                    Text(
+                        text = "📅 $dateStr",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                        )
+                    )
+                }
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.ChatBubbleOutline,
@@ -691,6 +701,15 @@ fun QuestionCard(
                 }
             }
         }
+    }
+}
+
+fun formatQuestionDate(date: java.util.Date): String {
+    return try {
+        val sdf = java.text.SimpleDateFormat("d MMMM", java.util.Locale("tr", "TR"))
+        sdf.format(date)
+    } catch (_: Exception) {
+        ""
     }
 }
 

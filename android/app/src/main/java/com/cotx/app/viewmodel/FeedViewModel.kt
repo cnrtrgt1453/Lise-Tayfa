@@ -131,6 +131,8 @@ class FeedViewModel(
                 isLiked = isLiked
             ).onSuccess {
                 loadFeed()
+            }.onFailure { e ->
+                android.util.Log.e("FeedViewModel", "toggleLike failed: ${e.message}", e)
             }
         }
     }

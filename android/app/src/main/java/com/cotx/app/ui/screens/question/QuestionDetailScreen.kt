@@ -1,6 +1,10 @@
 package com.cotx.app.ui.screens.question
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -51,6 +55,15 @@ fun QuestionDetailScreen(
     var isLoading by remember { mutableStateOf(true) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var solutionToReport by remember { mutableStateOf<Solution?>(null) }
+    var replyingToSolution by remember { mutableStateOf<Solution?>(null) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+    }
 
     fun loadData() {
         coroutineScope.launch {
@@ -101,40 +114,155 @@ fun QuestionDetailScreen(
                     color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 8.dp
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = solutionText,
-                            onValueChange = { if (it.length <= 500) solutionText = it },
-                            placeholder = { Text("Çözümünü veya adımını yaz...") },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        IconButton(
-                            onClick = {
-                                if (solutionText.isNotBlank()) {
-                                    val text = solutionText
-                                    solutionText = ""
-                                    coroutineScope.launch {
-                                        repository.addSolution(
-                                            questionId = questionId,
-                                            authorId = currentUser.id,
-                                            authorName = currentUser.displayName,
-                                            authorPhotoUrl = currentUser.avatarUrl ?: "",
-                                            contentText = text
-                                        )
-                                        loadData()
-                                    }
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        // 1. Replying Banner
+                        if (replyingToSolution != null) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(PrimaryPurple.copy(alpha = 0.12f))
+                                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Reply,
+                                        contentDescription = null,
+                                        tint = PrimaryPurple,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "@${replyingToSolution?.authorName?.ifEmpty { "Öğrenci" }} kişisine yanıt veriliyor",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = PrimaryPurple,
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    )
                                 }
-                            },
-                            colors = IconButtonDefaults.iconButtonColors(containerColor = PrimaryPurple)
+                                IconButton(
+                                    onClick = { replyingToSolution = null },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Vazgeç",
+                                        tint = PrimaryPurple,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // 2. Selected Photo Preview Banner
+                        if (selectedImageUri != null) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    AsyncImage(
+                                        model = selectedImageUri,
+                                        contentDescription = "Seçilen Fotoğraf",
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "Fotoğraf eklendi 📷",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
+                                    )
+                                }
+                                IconButton(
+                                    onClick = { selectedImageUri = null },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Fotoğrafı Kaldır",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // 3. Input Row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Send, contentDescription = "Gönder", tint = Color.White)
+                            IconButton(
+                                onClick = { photoPickerLauncher.launch("image/*") },
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AddPhotoAlternate,
+                                    contentDescription = "Fotoğraf Ekle",
+                                    tint = if (selectedImageUri != null) PrimaryPurple else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(4.dp))
+
+                            OutlinedTextField(
+                                value = solutionText,
+                                onValueChange = { if (it.length <= 500) solutionText = it },
+                                placeholder = {
+                                    Text(
+                                        if (replyingToSolution != null) "@${replyingToSolution?.authorName}'a yanıt yaz..." else "Çözümünü veya adımını yaz..."
+                                    )
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(20.dp),
+                                maxLines = 4
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            IconButton(
+                                onClick = {
+                                    if (solutionText.isNotBlank() || selectedImageUri != null) {
+                                        val text = solutionText
+                                        val targetReply = replyingToSolution
+                                        val imageToSend = selectedImageUri
+                                        solutionText = ""
+                                        replyingToSolution = null
+                                        selectedImageUri = null
+                                        coroutineScope.launch {
+                                            repository.addSolution(
+                                                questionId = questionId,
+                                                authorId = currentUser.id,
+                                                authorName = currentUser.displayName,
+                                                authorPhotoUrl = currentUser.avatarUrl ?: "",
+                                                contentText = text,
+                                                replyToSolutionId = targetReply?.id,
+                                                replyToAuthorName = targetReply?.authorName,
+                                                imageUri = imageToSend,
+                                                context = context
+                                            )
+                                            loadData()
+                                        }
+                                    }
+                                },
+                                colors = IconButtonDefaults.iconButtonColors(containerColor = PrimaryPurple)
+                            ) {
+                                Icon(Icons.Default.Send, contentDescription = "Gönder", tint = Color.White)
+                            }
                         }
                     }
                 }
@@ -327,8 +455,59 @@ fun QuestionDetailScreen(
                         solution = solution,
                         currentUserId = currentUser.id,
                         onAuthorClick = { userId -> onNavigateToProfile(userId) },
+                        onLikeClick = {
+                            val isLiked = solution.likedBy.contains(currentUser.id)
+                            coroutineScope.launch {
+                                repository.toggleLikeSolution(
+                                    questionId = questionId,
+                                    solutionId = solution.id,
+                                    userId = currentUser.id,
+                                    userName = currentUser.displayName,
+                                    userPhotoUrl = currentUser.avatarUrl ?: "",
+                                    isLiked = isLiked
+                                )
+                                repository.getQuestionSolutions(questionId).onSuccess { list ->
+                                    solutions = list
+                                }
+                            }
+                        },
+                        onReplyClick = {
+                            replyingToSolution = solution
+                        },
+                        onImageClick = { imageUrl ->
+                            fullScreenImageUrl = imageUrl
+                        },
                         onReportClick = { solutionToReport = solution }
                     )
+                }
+            }
+        }
+
+        if (fullScreenImageUrl != null) {
+            Dialog(onDismissRequest = { fullScreenImageUrl = null }) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black)
+                ) {
+                    AsyncImage(
+                        model = com.cotx.app.util.ImageModelResolver.resolve(fullScreenImageUrl ?: ""),
+                        contentDescription = "Tam Ekran Görsel",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 500.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                    IconButton(
+                        onClick = { fullScreenImageUrl = null },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Kapat", tint = Color.White)
+                    }
                 }
             }
         }
@@ -364,8 +543,13 @@ fun SolutionItem(
     solution: Solution,
     currentUserId: String = "",
     onAuthorClick: (userId: String) -> Unit = {},
+    onLikeClick: () -> Unit = {},
+    onReplyClick: () -> Unit = {},
+    onImageClick: (imageUrl: String) -> Unit = {},
     onReportClick: () -> Unit = {}
 ) {
+    val isLiked = solution.likedBy.contains(currentUserId)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -374,6 +558,7 @@ fun SolutionItem(
         )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
+            // Header: Author Avatar & Name & Status / Report
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -409,10 +594,22 @@ fun SolutionItem(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    Text(
-                        text = solution.authorName.ifEmpty { "Öğrenci" },
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp)
-                    )
+                    Column {
+                        Text(
+                            text = solution.authorName.ifEmpty { "Öğrenci" },
+                            style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp)
+                        )
+                        if (!solution.replyToAuthorName.isNullOrEmpty()) {
+                            Text(
+                                text = "↳ @${solution.replyToAuthorName} yanıtlandı",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = PrimaryPurple,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            )
+                        }
+                    }
                 }
 
                 if (solution.isAcceptedAnswer) {
@@ -438,9 +635,82 @@ fun SolutionItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Solution Text
+            if (solution.contentText.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = solution.contentText, style = MaterialTheme.typography.bodyMedium)
+            }
 
-            Text(text = solution.contentText, style = MaterialTheme.typography.bodyMedium)
+            // Solution Photo (if attached)
+            if (!solution.solutionImageUrl.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                AsyncImage(
+                    model = com.cotx.app.util.ImageModelResolver.resolve(solution.solutionImageUrl),
+                    contentDescription = "Çözüm Fotoğrafı",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 220.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onImageClick(solution.solutionImageUrl) },
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Action Buttons: Like and Reply
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Like button & count
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onLikeClick() }
+                        .padding(horizontal = 6.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Beğen",
+                        tint = if (isLiked) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${solution.likeCount}",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            color = if (isLiked) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = if (isLiked) FontWeight.Bold else FontWeight.Normal
+                        )
+                    )
+                }
+
+                // Reply button
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onReplyClick() }
+                        .padding(horizontal = 6.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Reply,
+                        contentDescription = "Yanıtla",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Yanıtla",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
+                }
+            }
         }
     }
 }

@@ -13,6 +13,10 @@ data class Solution(
     val solutionImageUrl: String? = null,
     val isAcceptedAnswer: Boolean = false,
     val upvotes: Int = 0,
+    val likeCount: Int = 0,
+    val likedBy: List<String> = emptyList(),
+    val replyToSolutionId: String? = null,
+    val replyToAuthorName: String? = null,
     @ServerTimestamp
     val createdAt: Date? = null
 )

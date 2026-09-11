@@ -73,6 +73,8 @@ fun ProfileScreen(
 
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var showReportUserDialog by remember { mutableStateOf(false) }
+    var showBlockConfirmationDialog by remember { mutableStateOf(false) }
+    var showOtherUserMenu by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
     var showPrivacySubmenu by remember { mutableStateOf(false) }
@@ -195,6 +197,68 @@ fun ProfileScreen(
                                             showDeleteConfirmation = true
                                         },
                                         modifier = Modifier.padding(start = 16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    } else if (currentUserId.isNotEmpty()) {
+                        // Other user's profile - 3-line hamburger menu
+                        Box {
+                            IconButton(onClick = { showOtherUserMenu = true }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menü")
+                            }
+                            DropdownMenu(
+                                expanded = showOtherUserMenu,
+                                onDismissRequest = { showOtherUserMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Kullanıcıyı Bildir") },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Info,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    },
+                                    onClick = {
+                                        showOtherUserMenu = false
+                                        showReportUserDialog = true
+                                    }
+                                )
+                                if (isTargetBlocked) {
+                                    DropdownMenuItem(
+                                        text = { Text("Engeli Kaldır") },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.CheckCircle,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        },
+                                        onClick = {
+                                            showOtherUserMenu = false
+                                            scope.launch {
+                                                authRepository.unblockUser(currentUserId, displayedUser.uid).onSuccess {
+                                                    currentUserBlockedList = currentUserBlockedList - displayedUser.uid
+                                                    android.widget.Toast.makeText(context, "Kullanıcının engeli kaldırıldı", android.widget.Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        }
+                                    )
+                                } else {
+                                    DropdownMenuItem(
+                                        text = { Text("Kullanıcıyı Engelle", color = MaterialTheme.colorScheme.error) },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Block,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                        },
+                                        onClick = {
+                                            showOtherUserMenu = false
+                                            showBlockConfirmationDialog = true
+                                        }
                                     )
                                 }
                             }
@@ -413,35 +477,6 @@ fun ProfileScreen(
                                     Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(16.dp), tint = SecondaryOrange)
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text("Mesaj", fontWeight = FontWeight.Bold)
-                                }
-
-                                // Report Button
-                                OutlinedButton(
-                                    onClick = { showReportUserDialog = true },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Icon(Icons.Default.Info, contentDescription = "Bildir", modifier = Modifier.size(16.dp))
-                                }
-
-                                // Block Button
-                                OutlinedButton(
-                                    onClick = {
-                                        scope.launch {
-                                            authRepository.blockUser(currentUserId, displayedUser.uid).onSuccess {
-                                                currentUserBlockedList = currentUserBlockedList + displayedUser.uid
-                                                currentUserFollowing = currentUserFollowing - displayedUser.uid
-                                                displayedUser = displayedUser.copy(
-                                                    followers = displayedUser.followers - currentUserId,
-                                                    following = displayedUser.following - currentUserId
-                                                )
-                                            }
-                                        }
-                                    },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Icon(Icons.Default.Block, contentDescription = "Engelle", modifier = Modifier.size(16.dp))
                                 }
                             }
                         }
@@ -806,6 +841,41 @@ fun ProfileScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Vazgeç")
+                }
+            }
+        )
+    }
+
+    // Block User Confirmation Dialog
+    if (showBlockConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = { showBlockConfirmationDialog = false },
+            title = { Text("Kullanıcıyı Engelle", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) },
+            text = { Text("${displayedUser.displayName.ifEmpty { "Bu kullanıcıyı" }} engellemek istediğinize emin misiniz? Engellediğinizde birbirinizin paylaşımlarını ve mesajlarını göremezsiniz.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showBlockConfirmationDialog = false
+                        scope.launch {
+                            authRepository.blockUser(currentUserId, displayedUser.uid).onSuccess {
+                                currentUserBlockedList = currentUserBlockedList + displayedUser.uid
+                                currentUserFollowing = currentUserFollowing - displayedUser.uid
+                                displayedUser = displayedUser.copy(
+                                    followers = displayedUser.followers - currentUserId,
+                                    following = displayedUser.following - currentUserId
+                                )
+                                android.widget.Toast.makeText(context, "Kullanıcı engellendi", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Evet, Engelle", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBlockConfirmationDialog = false }) {
                     Text("Vazgeç")
                 }
             }

@@ -275,81 +275,208 @@ class QuestionRepository(
                 }
             }
         }
+        Unit
+    }.onFailure { e ->
+        android.util.Log.e("QuestionRepository", "toggleLikeQuestion error: ${e.message}", e)
     }
 
     /**
-     * Post a solution / comment
+     * Toggle like for a solution/comment
+     */
+    suspend fun toggleLikeSolution(
+        questionId: String,
+        solutionId: String,
+        userId: String,
+        userName: String = "",
+        userPhotoUrl: String = "",
+        isLiked: Boolean
+    ): Result<Unit> = runCatching {
+        val solDocRef = firestore.collection("questions").document(questionId)
+            .collection("solutions").document(solutionId)
+
+        if (isLiked) {
+            solDocRef.update(
+                "likeCount", FieldValue.increment(-1),
+                "likedBy", FieldValue.arrayRemove(userId)
+            ).await()
+        } else {
+            solDocRef.update(
+                "likeCount", FieldValue.increment(1),
+                "likedBy", FieldValue.arrayUnion(userId)
+            ).await()
+
+            // Trigger notification to solution author
+            runCatching {
+                val solSnapshot = solDocRef.get().await()
+                val targetAuthorId = solSnapshot.getString("authorId")
+                if (!targetAuthorId.isNullOrEmpty() && targetAuthorId != userId) {
+                    notificationRepository.sendNotification(
+                        userId = targetAuthorId,
+                        senderId = userId,
+                        senderName = userName.ifEmpty { "Bir öğrenci" },
+                        senderPhotoUrl = userPhotoUrl,
+                        questionId = questionId,
+                        type = "LIKE",
+                        message = "${userName.ifEmpty { "Bir öğrenci" }} çözümünü/yorumunu beğendi ❤️"
+                    )
+                }
+            }.onFailure { e ->
+                android.util.Log.e("QuestionRepository", "Failed to send like notification for solution: ${e.message}", e)
+            }
+        }
+        Unit
+    }.onFailure { e ->
+        android.util.Log.e("QuestionRepository", "toggleLikeSolution error: ${e.message}", e)
+    }
+
+    /**
+     * Upload solution image with WebP compression and fallback
+     */
+    private suspend fun uploadSolutionImage(
+        context: Context,
+        solutionId: String,
+        imageUri: Uri
+    ): String? = withContext(Dispatchers.IO) {
+        val imageBytes = ImageCompressor.compressUriToWebp(context, imageUri)
+        if (imageBytes.isEmpty()) return@withContext null
+
+        var downloadUrl: String? = null
+        val metadata = StorageMetadata.Builder()
+            .setContentType("image/jpeg")
+            .build()
+
+        val bucketCandidates = listOf(
+            "gs://cotx-c167c.appspot.com",
+            "gs://cotx-c167c.firebasestorage.app",
+            null
+        )
+
+        for (bucketUrl in bucketCandidates) {
+            try {
+                val storageInstance = if (bucketUrl != null) FirebaseStorage.getInstance(bucketUrl) else FirebaseStorage.getInstance()
+                val storageRef = storageInstance.reference.child("solutions/$solutionId.jpg")
+                val snapshot = storageRef.putBytes(imageBytes, metadata).await()
+                downloadUrl = try {
+                    storageRef.downloadUrl.await().toString()
+                } catch (e: Exception) {
+                    val bucket = snapshot.storage.bucket
+                    val encodedPath = java.net.URLEncoder.encode("solutions/$solutionId.jpg", "UTF-8")
+                    "https://firebasestorage.googleapis.com/v0/b/$bucket/o/$encodedPath?alt=media"
+                }
+                if (!downloadUrl.isNullOrEmpty()) break
+            } catch (_: Exception) {}
+        }
+
+        if (!downloadUrl.isNullOrEmpty()) {
+            downloadUrl
+        } else {
+            val base64Str = android.util.Base64.encodeToString(imageBytes, android.util.Base64.NO_WRAP)
+            "data:image/jpeg;base64,$base64Str"
+        }
+    }
+
+    /**
+     * Post a solution / comment with optional photo and reply support
      */
     suspend fun addSolution(
         questionId: String,
         authorId: String,
         authorName: String,
         authorPhotoUrl: String,
-        contentText: String
+        contentText: String,
+        replyToSolutionId: String? = null,
+        replyToAuthorName: String? = null,
+        imageUri: Uri? = null,
+        context: Context? = null
     ): Result<Solution> = runCatching {
-        if (com.cotx.app.util.ProfanityFilter.containsProfanity(contentText)) {
+        if (contentText.isNotBlank() && com.cotx.app.util.ProfanityFilter.containsProfanity(contentText)) {
             throw IllegalArgumentException("Yorumunuz topluluk kurallarına aykırı ifadeler (argo/küfür/hakaret) içermektedir.")
         }
 
         val solutionId = UUID.randomUUID().toString()
+
+        var uploadedImageUrl: String? = null
+        if (imageUri != null && context != null) {
+            uploadedImageUrl = uploadSolutionImage(context, solutionId, imageUri)
+        }
+
         val solution = Solution(
             id = solutionId,
             questionId = questionId,
             authorId = authorId,
             authorName = authorName,
             authorPhotoUrl = authorPhotoUrl,
-            contentText = contentText
+            contentText = contentText.trim(),
+            solutionImageUrl = uploadedImageUrl,
+            replyToSolutionId = replyToSolutionId,
+            replyToAuthorName = replyToAuthorName
         )
 
         firestore.collection("questions").document(questionId)
             .collection("solutions").document(solutionId)
             .set(solution).await()
 
-        firestore.collection("questions").document(questionId)
-            .update("commentCount", FieldValue.increment(1)).await()
-
-        // Trigger notifications to question author and prior commenters
+        // Safely increment commentCount without blocking notification flow
         runCatching {
-            val qSnapshot = firestore.collection("questions").document(questionId).get().await()
-            val question = qSnapshot.toObject(Question::class.java)
+            firestore.collection("questions").document(questionId)
+                .update("commentCount", FieldValue.increment(1)).await()
+        }.onFailure { e ->
+            android.util.Log.w("QuestionRepository", "Failed to increment commentCount: ${e.message}", e)
+        }
 
-            // 1. Notify question author if commenter is not the question author
-            if (question != null && question.authorId.isNotEmpty() && question.authorId != authorId) {
-                notificationRepository.sendNotification(
-                    userId = question.authorId,
-                    senderId = authorId,
-                    senderName = authorName,
-                    senderPhotoUrl = authorPhotoUrl,
-                    questionId = questionId,
-                    type = "COMMENT",
-                    message = "$authorName soruna yeni bir çözüm ekledi 💬"
-                )
+        // Trigger notifications according to requirements:
+        // 1. If this is a reply to another comment: ONLY notify the author of the replied comment
+        // 2. If this is a normal comment: ONLY notify the question author (do NOT notify previous commenters)
+        runCatching {
+            if (!replyToSolutionId.isNullOrEmpty()) {
+                val repliedSolDoc = firestore.collection("questions").document(questionId)
+                    .collection("solutions").document(replyToSolutionId)
+                    .get().await()
+                val targetAuthorId = repliedSolDoc.getString("authorId")
+                if (!targetAuthorId.isNullOrEmpty() && targetAuthorId != authorId) {
+                    val snippet = if (contentText.length > 35) contentText.take(35) + "..." else contentText
+                    val notifMessage = if (snippet.isNotEmpty()) {
+                        "$authorName yorumunu yanıtladı: \"$snippet\" 💬"
+                    } else {
+                        "$authorName yorumuna fotoğrafla yanıt verdi 📷"
+                    }
+                    notificationRepository.sendNotification(
+                        userId = targetAuthorId,
+                        senderId = authorId,
+                        senderName = authorName,
+                        senderPhotoUrl = authorPhotoUrl,
+                        questionId = questionId,
+                        type = "COMMENT",
+                        message = notifMessage
+                    )
+                }
+            } else {
+                val qSnapshot = firestore.collection("questions").document(questionId).get().await()
+                val question = qSnapshot.toObject(Question::class.java)
+                if (question != null && question.authorId.isNotEmpty() && question.authorId != authorId) {
+                    val notifMessage = if (contentText.isNotEmpty()) {
+                        "$authorName soruna yeni bir çözüm ekledi 💬"
+                    } else {
+                        "$authorName soruna fotoğraflı çözüm ekledi 📷"
+                    }
+                    notificationRepository.sendNotification(
+                        userId = question.authorId,
+                        senderId = authorId,
+                        senderName = authorName,
+                        senderPhotoUrl = authorPhotoUrl,
+                        questionId = questionId,
+                        type = "COMMENT",
+                        message = notifMessage
+                    )
+                }
             }
-
-            // 2. Fetch previous commenters for this question and notify them
-            val solutionsSnapshot = firestore.collection("questions").document(questionId)
-                .collection("solutions")
-                .get().await()
-
-            val previousCommenterIds = solutionsSnapshot.documents
-                .mapNotNull { it.getString("authorId") }
-                .filter { it.isNotEmpty() && it != authorId && it != question?.authorId }
-                .distinct()
-
-            for (commenterId in previousCommenterIds) {
-                notificationRepository.sendNotification(
-                    userId = commenterId,
-                    senderId = authorId,
-                    senderName = authorName,
-                    senderPhotoUrl = authorPhotoUrl,
-                    questionId = questionId,
-                    type = "COMMENT",
-                    message = "$authorName yorum yaptığın soruya yeni bir yorum ekledi 💬"
-                )
-            }
+        }.onFailure { e ->
+            android.util.Log.e("QuestionRepository", "Failed to trigger comment notifications: ${e.message}", e)
         }
 
         solution
+    }.onFailure { e ->
+        android.util.Log.e("QuestionRepository", "addSolution failed: ${e.message}", e)
     }
 
     /**
@@ -422,6 +549,7 @@ class QuestionRepository(
                 SetOptions.merge()
             ).await()
         }
+        Unit
     }
 
     /**
@@ -444,6 +572,7 @@ class QuestionRepository(
             "createdAt" to java.util.Date()
         )
         firestore.collection("reports").document(reportId).set(reportData).await()
+        Unit
     }
 
     /**
@@ -468,6 +597,7 @@ class QuestionRepository(
             "createdAt" to java.util.Date()
         )
         firestore.collection("reports").document(reportId).set(reportData).await()
+        Unit
     }
 }
 
