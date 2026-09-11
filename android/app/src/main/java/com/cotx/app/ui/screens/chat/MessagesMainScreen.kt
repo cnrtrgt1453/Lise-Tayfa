@@ -36,6 +36,8 @@ import com.cotx.app.ui.theme.SecondaryOrange
 import com.cotx.app.viewmodel.ChatViewModel
 import com.cotx.app.viewmodel.MessagesTab
 import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,7 +70,7 @@ fun MessagesMainScreen(
 
     LaunchedEffect(globalMessages.size) {
         if (globalMessages.isNotEmpty()) {
-            listState.animateScrollToItem(globalMessages.size - 1)
+            listState.animateScrollToItem(globalMessages.size * 2)
         }
     }
 
@@ -167,12 +169,41 @@ fun MessagesMainScreen(
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(globalMessages) { msg ->
-                                GlobalMessageItem(
-                                    message = msg,
-                                    isMe = msg.senderId == currentUser.id,
-                                    onAuthorClick = { userId -> onNavigateToProfile(userId) }
-                                )
+                            globalMessages.forEachIndexed { index, msg ->
+                                val msgDate = msg.createdAt
+                                val prevDate = if (index > 0) globalMessages[index - 1].createdAt else null
+                                val showHeader = msgDate != null && (prevDate == null || !isSameDay(msgDate, prevDate))
+
+                                if (showHeader && msgDate != null) {
+                                    item(key = "header_${msgDate.time}_$index") {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 10.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Surface(
+                                                shape = RoundedCornerShape(12.dp),
+                                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+                                            ) {
+                                                Text(
+                                                    text = formatHeaderDate(msgDate),
+                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
+                                item(key = msg.id) {
+                                    GlobalMessageItem(
+                                        message = msg,
+                                        isMe = msg.senderId == currentUser.id,
+                                        onAuthorClick = { userId -> onNavigateToProfile(userId) }
+                                    )
+                                }
                             }
                         }
 
@@ -316,6 +347,8 @@ fun GlobalMessageItem(
     isMe: Boolean,
     onAuthorClick: (userId: String) -> Unit = {}
 ) {
+    val dateFormat = remember { SimpleDateFormat("HH:mm", Locale("tr")) }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start
@@ -338,7 +371,7 @@ fun GlobalMessageItem(
                     )
                 } else {
                     Text(
-                        text = message.senderName.take(1).uppercase(),
+                        text = message.senderName.ifEmpty { "Ö" }.take(1).uppercase(),
                         fontWeight = FontWeight.Bold,
                         color = PrimaryPurple,
                         fontSize = 14.sp
@@ -368,12 +401,24 @@ fun GlobalMessageItem(
                 color = if (isMe) PrimaryPurple else MaterialTheme.colorScheme.surfaceVariant,
                 modifier = Modifier.widthIn(max = 280.dp)
             ) {
-                Text(
-                    text = message.text,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    color = if (isMe) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Column(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = message.text,
+                        color = if (isMe) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    message.createdAt?.let { time ->
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = dateFormat.format(time),
+                            color = if (isMe) Color.White.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.align(Alignment.End)
+                        )
+                    }
+                }
             }
         }
     }
@@ -459,5 +504,31 @@ fun ConversationItem(
                 )
             }
         }
+    }
+}
+
+private fun isSameDay(date1: Date?, date2: Date?): Boolean {
+    if (date1 == null || date2 == null) return false
+    val cal1 = Calendar.getInstance().apply { time = date1 }
+    val cal2 = Calendar.getInstance().apply { time = date2 }
+    return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+            cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
+}
+
+private fun formatHeaderDate(date: Date): String {
+    val today = Calendar.getInstance()
+    val msgCal = Calendar.getInstance().apply { time = date }
+    val yesterday = Calendar.getInstance().apply {
+        add(Calendar.DAY_OF_YEAR, -1)
+    }
+
+    return when {
+        msgCal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                msgCal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) -> "Bugün"
+
+        msgCal.get(Calendar.YEAR) == yesterday.get(Calendar.YEAR) &&
+                msgCal.get(Calendar.DAY_OF_YEAR) == yesterday.get(Calendar.DAY_OF_YEAR) -> "Dün"
+
+        else -> SimpleDateFormat("d MMMM yyyy", Locale("tr")).format(date)
     }
 }

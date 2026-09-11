@@ -237,7 +237,8 @@ class QuestionRepository(
     }
 
     /**
-     * Toggle like for a question
+     * Toggle like for a question using an atomic transaction to ensure
+     * likeCount is ALWAYS identical to unique users in likedBy.
      */
     suspend fun toggleLikeQuestion(
         questionId: String,
@@ -246,33 +247,54 @@ class QuestionRepository(
         userPhotoUrl: String = "",
         isLiked: Boolean
     ): Result<Unit> = runCatching {
-        val docRef = firestore.collection("questions").document(questionId)
-        if (isLiked) {
-            docRef.update(
-                "likeCount", FieldValue.increment(-1),
-                "likedBy", FieldValue.arrayRemove(userId)
-            ).await()
-        } else {
-            docRef.update(
-                "likeCount", FieldValue.increment(1),
-                "likedBy", FieldValue.arrayUnion(userId)
-            ).await()
+        if (userId.isEmpty()) return@runCatching
 
-            // Trigger notification to question author
-            runCatching {
-                val qSnapshot = docRef.get().await()
-                val question = qSnapshot.toObject(Question::class.java)
-                if (question != null && question.authorId != userId) {
-                    notificationRepository.sendNotification(
-                        userId = question.authorId,
-                        senderId = userId,
-                        senderName = userName.ifEmpty { "Bir öğrenci" },
-                        senderPhotoUrl = userPhotoUrl,
-                        questionId = questionId,
-                        type = "LIKE",
-                        message = "${userName.ifEmpty { "Bir öğrenci" }} sorunu beğendi ❤️"
-                    )
+        val docRef = firestore.collection("questions").document(questionId)
+        var shouldNotifyAuthor = false
+        var targetAuthorId = ""
+
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(docRef)
+            val currentLikedBy = (snapshot.get("likedBy") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+            val authorId = snapshot.getString("authorId") ?: ""
+            targetAuthorId = authorId
+
+            val isCurrentlyLiked = currentLikedBy.contains(userId)
+
+            val newLikedBy = if (isLiked) {
+                // User wants to UNLIKE
+                if (isCurrentlyLiked) currentLikedBy - userId else currentLikedBy
+            } else {
+                // User wants to LIKE
+                if (!isCurrentlyLiked) {
+                    shouldNotifyAuthor = true
+                    currentLikedBy + userId
+                } else {
+                    currentLikedBy
                 }
+            }
+
+            // Always synchronize likeCount strictly with unique user IDs in newLikedBy
+            transaction.update(
+                docRef,
+                mapOf(
+                    "likedBy" to newLikedBy,
+                    "likeCount" to newLikedBy.size
+                )
+            )
+        }.await()
+
+        if (shouldNotifyAuthor && targetAuthorId.isNotEmpty() && targetAuthorId != userId) {
+            runCatching {
+                notificationRepository.sendNotification(
+                    userId = targetAuthorId,
+                    senderId = userId,
+                    senderName = userName.ifEmpty { "Bir öğrenci" },
+                    senderPhotoUrl = userPhotoUrl,
+                    questionId = questionId,
+                    type = "LIKE",
+                    message = "${userName.ifEmpty { "Bir öğrenci" }} sorunu beğendi ❤️"
+                )
             }
         }
         Unit
@@ -281,7 +303,8 @@ class QuestionRepository(
     }
 
     /**
-     * Toggle like for a solution/comment
+     * Toggle like for a solution/comment using an atomic transaction to ensure
+     * likeCount is ALWAYS identical to unique users in likedBy.
      */
     suspend fun toggleLikeSolution(
         questionId: String,
@@ -291,37 +314,55 @@ class QuestionRepository(
         userPhotoUrl: String = "",
         isLiked: Boolean
     ): Result<Unit> = runCatching {
+        if (userId.isEmpty()) return@runCatching
+
         val solDocRef = firestore.collection("questions").document(questionId)
             .collection("solutions").document(solutionId)
 
-        if (isLiked) {
-            solDocRef.update(
-                "likeCount", FieldValue.increment(-1),
-                "likedBy", FieldValue.arrayRemove(userId)
-            ).await()
-        } else {
-            solDocRef.update(
-                "likeCount", FieldValue.increment(1),
-                "likedBy", FieldValue.arrayUnion(userId)
-            ).await()
+        var shouldNotifyAuthor = false
+        var targetAuthorId = ""
 
-            // Trigger notification to solution author
-            runCatching {
-                val solSnapshot = solDocRef.get().await()
-                val targetAuthorId = solSnapshot.getString("authorId")
-                if (!targetAuthorId.isNullOrEmpty() && targetAuthorId != userId) {
-                    notificationRepository.sendNotification(
-                        userId = targetAuthorId,
-                        senderId = userId,
-                        senderName = userName.ifEmpty { "Bir öğrenci" },
-                        senderPhotoUrl = userPhotoUrl,
-                        questionId = questionId,
-                        type = "LIKE",
-                        message = "${userName.ifEmpty { "Bir öğrenci" }} çözümünü/yorumunu beğendi ❤️"
-                    )
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(solDocRef)
+            val currentLikedBy = (snapshot.get("likedBy") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+            val authorId = snapshot.getString("authorId") ?: ""
+            targetAuthorId = authorId
+
+            val isCurrentlyLiked = currentLikedBy.contains(userId)
+
+            val newLikedBy = if (isLiked) {
+                // User wants to UNLIKE
+                if (isCurrentlyLiked) currentLikedBy - userId else currentLikedBy
+            } else {
+                // User wants to LIKE
+                if (!isCurrentlyLiked) {
+                    shouldNotifyAuthor = true
+                    currentLikedBy + userId
+                } else {
+                    currentLikedBy
                 }
-            }.onFailure { e ->
-                android.util.Log.e("QuestionRepository", "Failed to send like notification for solution: ${e.message}", e)
+            }
+
+            transaction.update(
+                solDocRef,
+                mapOf(
+                    "likedBy" to newLikedBy,
+                    "likeCount" to newLikedBy.size
+                )
+            )
+        }.await()
+
+        if (shouldNotifyAuthor && targetAuthorId.isNotEmpty() && targetAuthorId != userId) {
+            runCatching {
+                notificationRepository.sendNotification(
+                    userId = targetAuthorId,
+                    senderId = userId,
+                    senderName = userName.ifEmpty { "Bir öğrenci" },
+                    senderPhotoUrl = userPhotoUrl,
+                    questionId = questionId,
+                    type = "LIKE",
+                    message = "${userName.ifEmpty { "Bir öğrenci" }} çözümünü/yorumunu beğendi ❤️"
+                )
             }
         }
         Unit

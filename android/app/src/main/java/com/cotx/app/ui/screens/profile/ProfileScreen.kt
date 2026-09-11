@@ -27,6 +27,7 @@ import com.cotx.app.data.repository.AuthRepository
 import com.cotx.app.data.repository.QuestionRepository
 import com.cotx.app.ui.components.CotxBottomBar
 import com.cotx.app.ui.components.CotxBottomTab
+import com.cotx.app.ui.components.LikedUsersDialog
 import com.cotx.app.ui.screens.feed.QuestionCard
 import com.cotx.app.ui.theme.PrimaryPurple
 import com.cotx.app.ui.theme.SecondaryOrange
@@ -49,6 +50,10 @@ fun ProfileScreen(
     onNavigateToQuestionDetail: (questionId: String) -> Unit,
     onDeleteAccount: () -> Unit,
     onLogout: () -> Unit,
+    onNavigateToReportUser: (targetUserId: String, targetUserName: String) -> Unit = { _, _ -> },
+    onNavigateToFollowList: (userId: String, initialTab: Int) -> Unit = { _, _ -> },
+    onNavigateToLikedUsers: (questionId: String) -> Unit = {},
+    onNavigateToBlockedUsers: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val authRepository = remember { AuthRepository() }
@@ -72,24 +77,11 @@ fun ProfileScreen(
     val isTargetBlocked = currentUserBlockedList.contains(displayedUser.uid)
 
     var showDeleteConfirmation by remember { mutableStateOf(false) }
-    var showReportUserDialog by remember { mutableStateOf(false) }
     var showBlockConfirmationDialog by remember { mutableStateOf(false) }
     var showOtherUserMenu by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
     var showPrivacySubmenu by remember { mutableStateOf(false) }
-
-    // User List Modal (Takipçi / Takip Edilen)
-    var showUserListModal by remember { mutableStateOf(false) }
-    var activeModalTab by remember { mutableStateOf(0) } // 0: Takipçiler, 1: Takip Edilenler
-    var modalFollowers by remember { mutableStateOf<List<User>>(emptyList()) }
-    var modalFollowing by remember { mutableStateOf<List<User>>(emptyList()) }
-    var isModalLoading by remember { mutableStateOf(false) }
-
-    // Blocked Users Modal
-    var showBlockedUsersModal by remember { mutableStateOf(false) }
-    var blockedUsersList by remember { mutableStateOf<List<User>>(emptyList()) }
-    var isBlockedModalLoading by remember { mutableStateOf(false) }
 
     // Fetch acting-user identity (for mutation attribution) + Target User Info & Questions
     LaunchedEffect(currentUserId, effectiveTargetUserId) {
@@ -175,16 +167,7 @@ fun ProfileScreen(
                                         onClick = {
                                             showMenu = false
                                             showPrivacySubmenu = false
-                                            showBlockedUsersModal = true
-                                            isBlockedModalLoading = true
-                                            scope.launch {
-                                                authRepository.getUsersByIds(currentUserBlockedList).onSuccess { list ->
-                                                    blockedUsersList = list
-                                                    isBlockedModalLoading = false
-                                                }.onFailure {
-                                                    isBlockedModalLoading = false
-                                                }
-                                            }
+                                            onNavigateToBlockedUsers()
                                         },
                                         modifier = Modifier.padding(start = 16.dp)
                                     )
@@ -222,7 +205,7 @@ fun ProfileScreen(
                                     },
                                     onClick = {
                                         showOtherUserMenu = false
-                                        showReportUserDialog = true
+                                        onNavigateToReportUser(displayedUser.uid, displayedUser.displayName)
                                     }
                                 )
                                 if (isTargetBlocked) {
@@ -370,14 +353,7 @@ fun ProfileScreen(
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.clickable {
-                                activeModalTab = 0
-                                showUserListModal = true
-                                isModalLoading = true
-                                scope.launch {
-                                    authRepository.getUsersByIds(displayedUser.followers).onSuccess { modalFollowers = it }
-                                    authRepository.getUsersByIds(displayedUser.following).onSuccess { modalFollowing = it }
-                                    isModalLoading = false
-                                }
+                                onNavigateToFollowList(displayedUser.uid, 0)
                             }
                         ) {
                             Text(
@@ -392,14 +368,7 @@ fun ProfileScreen(
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.clickable {
-                                activeModalTab = 1
-                                showUserListModal = true
-                                isModalLoading = true
-                                scope.launch {
-                                    authRepository.getUsersByIds(displayedUser.followers).onSuccess { modalFollowers = it }
-                                    authRepository.getUsersByIds(displayedUser.following).onSuccess { modalFollowing = it }
-                                    isModalLoading = false
-                                }
+                                onNavigateToFollowList(displayedUser.uid, 1)
                             }
                         ) {
                             Text(
@@ -575,14 +544,18 @@ fun ProfileScreen(
                         isFollowingAuthor = currentUserFollowing.contains(question.authorId),
                         onCardClick = { onNavigateToQuestionDetail(question.id) },
                         onLikeClick = {
-                            val isLiked = question.likedBy.contains(currentUserId)
+                            val isCurrentlyLiked = question.likedBy.contains(currentUserId)
+                            val newLikedBy = if (isCurrentlyLiked) question.likedBy - currentUserId else question.likedBy + currentUserId
+                            userQuestions = userQuestions.map { q ->
+                                if (q.id == question.id) q.copy(likedBy = newLikedBy, likeCount = newLikedBy.size) else q
+                            }
                             scope.launch {
                                 questionRepository.toggleLikeQuestion(
                                     questionId = question.id,
                                     userId = currentUserId,
                                     userName = myUser.displayName,
                                     userPhotoUrl = myUser.photoUrl,
-                                    isLiked = isLiked
+                                    isLiked = isCurrentlyLiked
                                 )
                                 questionRepository.getUserQuestions(effectiveTargetUserId).onSuccess { userQuestions = it }
                             }
@@ -613,214 +586,16 @@ fun ProfileScreen(
                                     }
                                 }
                             }
-                        } else null
+                        } else null,
+                        onLikesListClick = {
+                            onNavigateToLikedUsers(question.id)
+                        }
                     )
                 }
             }
         }
     }
 
-    // --- Modal Dialog for Followers / Following Dual-Tab List ---
-    if (showUserListModal) {
-        AlertDialog(
-            onDismissRequest = { showUserListModal = false },
-            title = {
-                TabRow(
-                    selectedTabIndex = activeModalTab,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = PrimaryPurple
-                ) {
-                    Tab(
-                        selected = activeModalTab == 0,
-                        onClick = { activeModalTab = 0 },
-                        text = {
-                            Text(
-                                text = "Takipçiler (${displayedUser.followers.size})",
-                                fontWeight = if (activeModalTab == 0) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 13.sp
-                            )
-                        }
-                    )
-                    Tab(
-                        selected = activeModalTab == 1,
-                        onClick = { activeModalTab = 1 },
-                        text = {
-                            Text(
-                                text = "Takip Edilen (${displayedUser.following.size})",
-                                fontWeight = if (activeModalTab == 1) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 13.sp
-                            )
-                        }
-                    )
-                }
-            },
-            text = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 360.dp)
-                ) {
-                    if (isModalLoading) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = PrimaryPurple)
-                    } else {
-                        val currentList = if (activeModalTab == 0) modalFollowers else modalFollowing
-                        if (currentList.isEmpty()) {
-                            Text(
-                                text = if (activeModalTab == 0) "Henüz takipçi bulunmuyor." else "Henüz takip edilen bulunmuyor.",
-                                modifier = Modifier.align(Alignment.Center),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        } else {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                items(currentList) { targetUser ->
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .clickable {
-                                                showUserListModal = false
-                                                if (targetUser.uid != currentUserId) {
-                                                    onNavigateToProfile(targetUser.uid)
-                                                } else {
-                                                    onNavigateToProfile(null)
-                                                }
-                                            }
-                                            .padding(8.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(40.dp)
-                                                .clip(CircleShape)
-                                                .background(PrimaryPurple.copy(alpha = 0.2f)),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            if (targetUser.photoUrl.isNotEmpty()) {
-                                                AsyncImage(
-                                                    model = com.cotx.app.util.ImageModelResolver.resolve(targetUser.photoUrl),
-                                                    contentDescription = null,
-                                                    modifier = Modifier.fillMaxSize(),
-                                                    contentScale = ContentScale.Crop
-                                                )
-                                            } else {
-                                                Text(
-                                                    text = targetUser.displayName.ifEmpty { "Ö" }.take(1).uppercase(),
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = PrimaryPurple,
-                                                    fontSize = 16.sp
-                                                )
-                                            }
-                                        }
-                                        Spacer(modifier = Modifier.width(12.dp))
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = targetUser.displayName.ifEmpty { "Öğrenci" },
-                                                fontWeight = FontWeight.Bold,
-                                                style = MaterialTheme.typography.bodyMedium
-                                            )
-                                            if (targetUser.targetUniversity.isNotEmpty() || targetUser.targetMajor.isNotEmpty()) {
-                                                Text(
-                                                    text = listOf(targetUser.targetUniversity, targetUser.targetMajor).filter { it.isNotEmpty() }.joinToString(" - "),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        }
-                                        Icon(
-                                            imageVector = Icons.Default.ChevronRight,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showUserListModal = false }) {
-                    Text("Kapat", fontWeight = FontWeight.Bold)
-                }
-            }
-        )
-    }
-
-    // --- Modal Dialog for Blocked Users List ---
-    if (showBlockedUsersModal) {
-        AlertDialog(
-            onDismissRequest = { showBlockedUsersModal = false },
-            title = { Text("Engellenen Kullanıcılar", fontWeight = FontWeight.Bold) },
-            text = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 350.dp)
-                ) {
-                    if (isBlockedModalLoading) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = PrimaryPurple)
-                    } else if (blockedUsersList.isEmpty()) {
-                        Text(
-                            text = "Engellenen kullanıcı bulunmuyor.",
-                            modifier = Modifier.align(Alignment.Center),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(blockedUsersList) { blockedUser ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(PrimaryPurple.copy(alpha = 0.2f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = blockedUser.displayName.ifEmpty { "Ö" }.take(1).uppercase(),
-                                            fontWeight = FontWeight.Bold,
-                                            color = PrimaryPurple
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text(
-                                        text = blockedUser.displayName.ifEmpty { "Öğrenci" },
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    TextButton(
-                                        onClick = {
-                                            scope.launch {
-                                                authRepository.unblockUser(currentUserId, blockedUser.uid).onSuccess {
-                                                    currentUserBlockedList = currentUserBlockedList - blockedUser.uid
-                                                    blockedUsersList = blockedUsersList.filter { it.uid != blockedUser.uid }
-                                                }
-                                            }
-                                        }
-                                    ) {
-                                        Text("Engeli Kaldır", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showBlockedUsersModal = false }) {
-                    Text("Kapat", fontWeight = FontWeight.Bold)
-                }
-            }
-        )
-    }
 
     // Delete Account Confirmation Dialog
     if (showDeleteConfirmation) {
@@ -877,27 +652,6 @@ fun ProfileScreen(
             dismissButton = {
                 TextButton(onClick = { showBlockConfirmationDialog = false }) {
                     Text("Vazgeç")
-                }
-            }
-        )
-    }
-
-    // Report User Dialog
-    if (showReportUserDialog) {
-        com.cotx.app.ui.components.ReportDialog(
-            title = "Kullanıcıyı Bildir 🚩",
-            onDismissRequest = { showReportUserDialog = false },
-            onConfirmReport = { reason, note ->
-                showReportUserDialog = false
-                scope.launch {
-                    authRepository.reportUser(
-                        targetUserId = displayedUser.uid,
-                        reporterId = currentUserId,
-                        reason = reason,
-                        note = note
-                    ).onSuccess {
-                        android.widget.Toast.makeText(context, "Kullanıcı bildirildi. İncelemeye alındı.", android.widget.Toast.LENGTH_SHORT).show()
-                    }
                 }
             }
         )

@@ -31,6 +31,7 @@ import com.cotx.app.data.model.Question
 import com.cotx.app.data.model.Solution
 import com.cotx.app.data.repository.QuestionRepository
 import com.cotx.app.domain.model.UserSummary
+import com.cotx.app.ui.components.LikedUsersDialog
 import com.cotx.app.ui.screens.feed.QuestionCard
 import com.cotx.app.ui.theme.AccentTeal
 import com.cotx.app.ui.theme.PrimaryPurple
@@ -45,6 +46,7 @@ fun QuestionDetailScreen(
     repository: QuestionRepository = QuestionRepository(),
     onNavigateToProfile: (userId: String) -> Unit = {},
     onNavigateToExplore: () -> Unit = {},
+    onNavigateToLikedUsers: (questionId: String) -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -415,16 +417,23 @@ fun QuestionDetailScreen(
                             onCardClick = {},
                             onAuthorClick = { onNavigateToProfile(currentQ.authorId) },
                             onLikeClick = {
-                                val isLiked = currentQ.likedBy.contains(currentUser.id)
+                                val isCurrentlyLiked = currentQ.likedBy.contains(currentUser.id)
+                                val newLikedBy = if (isCurrentlyLiked) currentQ.likedBy - currentUser.id else currentQ.likedBy + currentUser.id
+                                question = currentQ.copy(
+                                    likedBy = newLikedBy,
+                                    likeCount = newLikedBy.size
+                                )
                                 coroutineScope.launch {
                                     repository.toggleLikeQuestion(
                                         questionId = currentQ.id,
                                         userId = currentUser.id,
                                         userName = currentUser.displayName,
                                         userPhotoUrl = currentUser.avatarUrl ?: "",
-                                        isLiked = isLiked
+                                        isLiked = isCurrentlyLiked
                                     )
-                                    repository.getQuestionById(questionId).onSuccess { question = it }
+                                    repository.getQuestionById(questionId).onSuccess { updatedQ ->
+                                        if (updatedQ != null) question = updatedQ
+                                    }
                                 }
                             },
                             onFollowToggleClick = {},
@@ -436,7 +445,10 @@ fun QuestionDetailScreen(
                                         }
                                     }
                                 }
-                            } else null
+                            } else null,
+                            onLikesListClick = {
+                                onNavigateToLikedUsers(questionId)
+                            }
                         )
                     }
                 }
@@ -456,7 +468,11 @@ fun QuestionDetailScreen(
                         currentUserId = currentUser.id,
                         onAuthorClick = { userId -> onNavigateToProfile(userId) },
                         onLikeClick = {
-                            val isLiked = solution.likedBy.contains(currentUser.id)
+                            val isCurrentlyLiked = solution.likedBy.contains(currentUser.id)
+                            val newLikedBy = if (isCurrentlyLiked) solution.likedBy - currentUser.id else solution.likedBy + currentUser.id
+                            solutions = solutions.map { s ->
+                                if (s.id == solution.id) s.copy(likedBy = newLikedBy, likeCount = newLikedBy.size) else s
+                            }
                             coroutineScope.launch {
                                 repository.toggleLikeSolution(
                                     questionId = questionId,
@@ -464,7 +480,7 @@ fun QuestionDetailScreen(
                                     userId = currentUser.id,
                                     userName = currentUser.displayName,
                                     userPhotoUrl = currentUser.avatarUrl ?: "",
-                                    isLiked = isLiked
+                                    isLiked = isCurrentlyLiked
                                 )
                                 repository.getQuestionSolutions(questionId).onSuccess { list ->
                                     solutions = list
@@ -679,8 +695,9 @@ fun SolutionItem(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
+                    val displayLikeCount = if (solution.likedBy.isNotEmpty()) solution.likedBy.size else solution.likeCount
                     Text(
-                        text = "${solution.likeCount}",
+                        text = "$displayLikeCount",
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = if (isLiked) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = if (isLiked) FontWeight.Bold else FontWeight.Normal

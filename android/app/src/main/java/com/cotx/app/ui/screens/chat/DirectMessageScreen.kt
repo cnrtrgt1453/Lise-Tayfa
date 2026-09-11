@@ -37,6 +37,7 @@ fun DirectMessageScreen(
     isBlockedByMe: Boolean,
     authRepository: AuthRepository = remember { AuthRepository() },
     chatRepository: ChatRepository = remember { ChatRepository() },
+    onNavigateToReportUser: (targetUserId: String, targetUserName: String) -> Unit = { _, _ -> },
     onNavigateBack: () -> Unit
 ) {
     var messageText by remember { mutableStateOf("") }
@@ -46,7 +47,6 @@ fun DirectMessageScreen(
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    var showReportDialog by remember { mutableStateOf(false) }
     var showTopMenu by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -122,26 +122,6 @@ fun DirectMessageScreen(
         )
     }
 
-    if (showReportDialog) {
-        com.cotx.app.ui.components.ReportDialog(
-            title = "Kullanıcıyı / Sohbeti Bildir 🚩",
-            onDismissRequest = { showReportDialog = false },
-            onConfirmReport = { reason, note ->
-                showReportDialog = false
-                coroutineScope.launch {
-                    authRepository.reportUser(
-                        targetUserId = receiverId,
-                        reporterId = currentUser.id,
-                        reason = reason,
-                        note = note
-                    ).onSuccess {
-                        android.widget.Toast.makeText(context, "Kullanıcı bildirildi. İncelemeye alındı.", android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        )
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -165,7 +145,7 @@ fun DirectMessageScreen(
                                 leadingIcon = { Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
                                 onClick = {
                                     showTopMenu = false
-                                    showReportDialog = true
+                                    onNavigateToReportUser(receiverId, receiverName)
                                 }
                             )
                             if (!isBlockedByMe) {

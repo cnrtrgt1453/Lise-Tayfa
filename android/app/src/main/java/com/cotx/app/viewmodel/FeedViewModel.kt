@@ -122,6 +122,17 @@ class FeedViewModel(
     }
 
     fun toggleLike(questionId: String, currentUser: UserSummary, isLiked: Boolean) {
+        val currentState = _uiState.value
+        if (currentState is FeedUiState.Success) {
+            val updatedList = currentState.questions.map { q ->
+                if (q.id == questionId) {
+                    val newLikedBy = if (isLiked) q.likedBy - currentUser.id else q.likedBy + currentUser.id
+                    q.copy(likedBy = newLikedBy, likeCount = newLikedBy.size)
+                } else q
+            }
+            _uiState.value = FeedUiState.Success(updatedList)
+        }
+
         viewModelScope.launch {
             questionRepository.toggleLikeQuestion(
                 questionId = questionId,
@@ -129,10 +140,9 @@ class FeedViewModel(
                 userName = currentUser.displayName,
                 userPhotoUrl = currentUser.avatarUrl ?: "",
                 isLiked = isLiked
-            ).onSuccess {
-                loadFeed()
-            }.onFailure { e ->
+            ).onFailure { e ->
                 android.util.Log.e("FeedViewModel", "toggleLike failed: ${e.message}", e)
+                loadFeed()
             }
         }
     }

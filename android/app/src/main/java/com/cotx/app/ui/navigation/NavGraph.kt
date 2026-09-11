@@ -17,10 +17,14 @@ import com.cotx.app.ui.screens.chat.DirectMessageScreen
 import com.cotx.app.ui.screens.chat.MessagesMainScreen
 import com.cotx.app.ui.screens.feed.FeedScreen
 import com.cotx.app.ui.screens.notification.NotificationScreen
+import com.cotx.app.ui.screens.profile.BlockedUsersScreen
 import com.cotx.app.ui.screens.profile.EditProfileScreen
+import com.cotx.app.ui.screens.profile.FollowListScreen
 import com.cotx.app.ui.screens.profile.ProfileScreen
 import com.cotx.app.ui.screens.question.AddQuestionScreen
+import com.cotx.app.ui.screens.question.LikedUsersScreen
 import com.cotx.app.ui.screens.question.QuestionDetailScreen
+import com.cotx.app.ui.screens.report.ReportUserScreen
 import com.cotx.app.viewmodel.AddQuestionViewModel
 import com.cotx.app.viewmodel.AuthViewModel
 import com.cotx.app.viewmodel.ChatViewModel
@@ -124,6 +128,9 @@ fun CotxNavGraph(
                 onNavigateToDMList = {
                     if (user.uid.isNotEmpty()) chatViewModel.markAllConversationsAsRead(user.uid)
                     navController.navigate(Screen.Messages.route)
+                },
+                onNavigateToLikedUsers = { questionId ->
+                    navController.navigate(Screen.LikedUsers.createRoute(questionId))
                 }
             )
         }
@@ -161,6 +168,9 @@ fun CotxNavGraph(
                         popUpTo(Screen.Feed.route) { inclusive = true }
                     }
                 },
+                onNavigateToLikedUsers = { qId ->
+                    navController.navigate(Screen.LikedUsers.createRoute(qId))
+                },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -180,6 +190,9 @@ fun CotxNavGraph(
                 receiverName = receiverName,
                 currentUser = UserSummary(id = user.uid, displayName = user.displayName, avatarUrl = user.photoUrl),
                 isBlockedByMe = user.blockedUsers.contains(receiverId),
+                onNavigateToReportUser = { targetId, name ->
+                    navController.navigate(Screen.ReportUser.createRoute(targetId, name))
+                },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -277,6 +290,18 @@ fun CotxNavGraph(
                         popUpTo(0) { inclusive = true }
                     }
                 },
+                onNavigateToReportUser = { targetId, name ->
+                    navController.navigate(Screen.ReportUser.createRoute(targetId, name))
+                },
+                onNavigateToFollowList = { uid, initialTab ->
+                    navController.navigate(Screen.FollowList.createRoute(uid, initialTab))
+                },
+                onNavigateToLikedUsers = { questionId ->
+                    navController.navigate(Screen.LikedUsers.createRoute(questionId))
+                },
+                onNavigateToBlockedUsers = {
+                    navController.navigate(Screen.BlockedUsers.route)
+                },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -345,6 +370,88 @@ fun CotxNavGraph(
                 },
                 onNavigateToProfile = { targetUserId ->
                     navController.navigate(Screen.Profile.createRoute(targetUserId))
+                },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.ReportUser.route,
+            arguments = listOf(
+                navArgument("targetUserId") { type = NavType.StringType },
+                navArgument("userName") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val targetUserId = backStackEntry.arguments?.getString("targetUserId") ?: ""
+            val rawUserName = backStackEntry.arguments?.getString("userName")
+            val targetUserName = if (!rawUserName.isNullOrEmpty()) {
+                try {
+                    java.net.URLDecoder.decode(rawUserName, "UTF-8")
+                } catch (_: Exception) {
+                    rawUserName
+                }
+            } else ""
+            val myUserId = currentUser?.uid ?: ""
+
+            ReportUserScreen(
+                targetUserId = targetUserId,
+                targetUserName = targetUserName,
+                currentUserId = myUserId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.FollowList.route,
+            arguments = listOf(
+                navArgument("userId") { type = NavType.StringType },
+                navArgument("initialTab") {
+                    type = NavType.IntType
+                    defaultValue = 0
+                }
+            )
+        ) { backStackEntry ->
+            val targetUserId = backStackEntry.arguments?.getString("userId") ?: ""
+            val initialTab = backStackEntry.arguments?.getInt("initialTab") ?: 0
+            val myUserId = currentUser?.uid ?: ""
+
+            FollowListScreen(
+                targetUserId = targetUserId,
+                currentUserId = myUserId,
+                initialTab = initialTab,
+                onNavigateToProfile = { userId ->
+                    navController.navigate(Screen.Profile.createRoute(userId))
+                },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.LikedUsers.route,
+            arguments = listOf(
+                navArgument("questionId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val questionId = backStackEntry.arguments?.getString("questionId") ?: ""
+            LikedUsersScreen(
+                questionId = questionId,
+                onNavigateToProfile = { userId ->
+                    navController.navigate(Screen.Profile.createRoute(userId))
+                },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.BlockedUsers.route) {
+            val myUserId = currentUser?.uid ?: ""
+            BlockedUsersScreen(
+                currentUserId = myUserId,
+                onNavigateToProfile = { userId ->
+                    navController.navigate(Screen.Profile.createRoute(userId))
                 },
                 onNavigateBack = { navController.popBackStack() }
             )

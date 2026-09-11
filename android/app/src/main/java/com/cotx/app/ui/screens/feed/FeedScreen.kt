@@ -50,7 +50,8 @@ fun FeedScreen(
     onNavigateToQuestionDetail: (String) -> Unit,
     onNavigateToProfile: (userId: String?) -> Unit,
     onNavigateToNotifications: () -> Unit,
-    onNavigateToDMList: () -> Unit
+    onNavigateToDMList: () -> Unit,
+    onNavigateToLikedUsers: (questionId: String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
@@ -375,6 +376,9 @@ fun FeedScreen(
                                     },
                                     onReportQuestionClick = {
                                         questionToReport = question
+                                    },
+                                    onLikesListClick = {
+                                        onNavigateToLikedUsers(question.id)
                                     }
                                 )
                             }
@@ -420,7 +424,8 @@ fun QuestionCard(
     onLikeClick: () -> Unit,
     onFollowToggleClick: () -> Unit,
     onDeleteQuestionClick: (() -> Unit)? = null,
-    onReportQuestionClick: (() -> Unit)? = null
+    onReportQuestionClick: (() -> Unit)? = null,
+    onLikesListClick: (() -> Unit)? = null
 ) {
     val isLiked = question.likedBy.contains(currentUserId)
     var showOptionsMenu by remember { mutableStateOf(false) }
@@ -662,18 +667,27 @@ fun QuestionCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { onLikeClick() }
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Beğen",
-                        tint = if (isLiked) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = if (isLiked) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable { onLikeClick() }
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    val displayLikeCount = if (question.likedBy.isNotEmpty()) question.likedBy.size else question.likeCount
                     Text(
-                        text = "${question.likeCount}",
-                        style = MaterialTheme.typography.bodySmall
+                        text = "$displayLikeCount",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .clickable(enabled = onLikesListClick != null) {
+                                onLikesListClick?.invoke()
+                            }
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
                     )
                 }
 
